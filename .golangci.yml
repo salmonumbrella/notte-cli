@@ -1,0 +1,21 @@
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gofumpt
+    - goimports
+
+linters-settings:
+  goimports:
+    local-prefixes: github.com/salmonumbrella/notte-cli
+
+issues:
+  exclude-dirs:
+    - internal/api  # Generated code
