@@ -1,7 +1,11 @@
-.PHONY: build install clean test lint fmt generate
+.PHONY: build install clean test lint fmt generate setup
 
 VERSION ?= dev
 LDFLAGS := -ldflags "-X main.version=$(VERSION)"
+
+setup:
+	@command -v lefthook >/dev/null || (echo "Install lefthook: brew install lefthook" && exit 1)
+	lefthook install
 
 build:
 	go build $(LDFLAGS) -o notte ./cmd/notte

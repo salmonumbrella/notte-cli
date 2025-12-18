@@ -280,6 +280,16 @@ notte vault credentials $VAULT_ID add \
   --url "https://shop.example.com"
 ```
 
+## Development
+
+After cloning, install git hooks:
+
+```bash
+make setup
+```
+
+This installs [lefthook](https://github.com/evilmartians/lefthook) pre-commit and pre-push hooks for linting and testing.
+
 ## License
 
 MIT License - see LICENSE file for details.
