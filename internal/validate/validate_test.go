@@ -2,6 +2,7 @@
 package validate
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -135,6 +136,89 @@ func TestOutputFormat(t *testing.T) {
 			err := OutputFormat(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OutputFormat(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSessionID(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantErr bool
+	}{
+		{"sess_abc123def456", false},
+		{"sess_" + strings.Repeat("a", 32), false},
+		{"", true},
+		{"abc123", true},         // Missing prefix
+		{"session_abc123", true}, // Wrong prefix
+		{"sess_", true},          // Empty after prefix
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			err := SessionID(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SessionID(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestAgentID(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantErr bool
+	}{
+		{"agent_abc123def456", false},
+		{"", true},
+		{"abc123", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			err := AgentID(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("AgentID(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestWorkflowID(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantErr bool
+	}{
+		{"wf_abc123def456", false},
+		{"", true},
+		{"abc123", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			err := WorkflowID(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("WorkflowID(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestVaultID(t *testing.T) {
+	tests := []struct {
+		input   string
+		wantErr bool
+	}{
+		{"vault_abc123def456", false},
+		{"", true},
+		{"abc123", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			err := VaultID(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("VaultID(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
 			}
 		})
 	}
