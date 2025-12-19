@@ -9,21 +9,16 @@ const (
 	KeyringKey     = "api_key"
 )
 
-// getKeyring returns configured keyring
-func getKeyring() (keyring.Keyring, error) {
-	return keyring.Open(keyring.Config{
+// getFromSystemKeyring reads from the real OS keyring
+func getFromSystemKeyring(key string) (string, error) {
+	ring, err := keyring.Open(keyring.Config{
 		ServiceName: KeyringService,
 	})
-}
-
-// GetKeyringAPIKey retrieves API key from OS keychain
-func GetKeyringAPIKey() (string, error) {
-	kr, err := getKeyring()
 	if err != nil {
 		return "", err
 	}
 
-	item, err := kr.Get(KeyringKey)
+	item, err := ring.Get(key)
 	if err != nil {
 		return "", err
 	}
@@ -31,25 +26,44 @@ func GetKeyringAPIKey() (string, error) {
 	return string(item.Data), nil
 }
 
-// SetKeyringAPIKey stores API key in OS keychain
-func SetKeyringAPIKey(apiKey string) error {
-	kr, err := getKeyring()
+// setInSystemKeyring writes to the real OS keyring
+func setInSystemKeyring(key, value string) error {
+	ring, err := keyring.Open(keyring.Config{
+		ServiceName: KeyringService,
+	})
 	if err != nil {
 		return err
 	}
 
-	return kr.Set(keyring.Item{
-		Key:  KeyringKey,
-		Data: []byte(apiKey),
+	return ring.Set(keyring.Item{
+		Key:  key,
+		Data: []byte(value),
 	})
+}
+
+// deleteFromSystemKeyring removes from the real OS keyring
+func deleteFromSystemKeyring(key string) error {
+	ring, err := keyring.Open(keyring.Config{
+		ServiceName: KeyringService,
+	})
+	if err != nil {
+		return err
+	}
+
+	return ring.Remove(key)
+}
+
+// GetKeyringAPIKey retrieves API key from OS keychain
+func GetKeyringAPIKey() (string, error) {
+	return defaultKeyring.Get(KeyringKey)
+}
+
+// SetKeyringAPIKey stores API key in OS keychain
+func SetKeyringAPIKey(apiKey string) error {
+	return defaultKeyring.Set(KeyringKey, apiKey)
 }
 
 // DeleteKeyringAPIKey removes API key from OS keychain
 func DeleteKeyringAPIKey() error {
-	kr, err := getKeyring()
-	if err != nil {
-		return err
-	}
-
-	return kr.Remove(KeyringKey)
+	return defaultKeyring.Delete(KeyringKey)
 }
