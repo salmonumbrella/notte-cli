@@ -4,12 +4,47 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/salmonumbrella/notte-cli/internal/testutil"
 )
 
+// mockKeyringAdapter adapts testutil.MockKeyring to auth.KeyringStore
+type mockKeyringAdapter struct {
+	mock *testutil.MockKeyring
+}
+
+func (m *mockKeyringAdapter) Get(key string) (string, error) {
+	return m.mock.Get(key)
+}
+
+func (m *mockKeyringAdapter) Set(key, value string) error {
+	return m.mock.Set(key, value)
+}
+
+func (m *mockKeyringAdapter) Delete(key string) error {
+	return m.mock.Delete(key)
+}
+
+func setupTestAuth(t *testing.T) (*testutil.TestEnv, func()) {
+	t.Helper()
+	env := testutil.SetupTestEnv(t)
+
+	// Install mock keyring
+	adapter := &mockKeyringAdapter{mock: env.MockStore}
+	SetKeyring(adapter)
+
+	cleanup := func() {
+		ResetKeyring()
+	}
+
+	return env, cleanup
+}
+
 func TestGetAPIKey_EnvVar(t *testing.T) {
-	// Set env var
-	os.Setenv(EnvAPIKey, "env_test_key")
-	defer os.Unsetenv(EnvAPIKey)
+	env, cleanup := setupTestAuth(t)
+	defer cleanup()
+
+	env.SetEnv(EnvAPIKey, "env_test_key")
 
 	key, source, err := GetAPIKey("")
 	if err != nil {
@@ -23,13 +58,31 @@ func TestGetAPIKey_EnvVar(t *testing.T) {
 	}
 }
 
-func TestGetAPIKey_ConfigFile(t *testing.T) {
-	// Ensure no env var
-	os.Unsetenv(EnvAPIKey)
+func TestGetAPIKey_Keyring(t *testing.T) {
+	env, cleanup := setupTestAuth(t)
+	defer cleanup()
 
-	// Create temp config
-	tmpDir := t.TempDir()
-	cfgPath := filepath.Join(tmpDir, "config.json")
+	// Store key in mock keyring
+	env.MockStore.Set("api_key", "keyring_test_key")
+
+	key, source, err := GetAPIKey("")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if key != "keyring_test_key" {
+		t.Errorf("got %q, want 'keyring_test_key'", key)
+	}
+	if source != SourceKeyring {
+		t.Errorf("got source %q, want %q", source, SourceKeyring)
+	}
+}
+
+func TestGetAPIKey_ConfigFile(t *testing.T) {
+	env, cleanup := setupTestAuth(t)
+	defer cleanup()
+
+	// No env var, no keyring - should fall through to config
+	cfgPath := filepath.Join(env.TempDir, "config.json")
 	content := `{"api_key": "config_test_key"}`
 	if err := os.WriteFile(cfgPath, []byte(content), 0600); err != nil {
 		t.Fatalf("failed to write config: %v", err)
@@ -48,13 +101,48 @@ func TestGetAPIKey_ConfigFile(t *testing.T) {
 }
 
 func TestGetAPIKey_NotFound(t *testing.T) {
-	os.Unsetenv(EnvAPIKey)
+	env, cleanup := setupTestAuth(t)
+	defer cleanup()
 
-	tmpDir := t.TempDir()
-	cfgPath := filepath.Join(tmpDir, "config.json")
+	cfgPath := filepath.Join(env.TempDir, "config.json")
 
 	_, _, err := GetAPIKey(cfgPath)
 	if err == nil {
 		t.Error("expected error when no API key found")
+	}
+	if err != ErrNoAPIKey {
+		t.Errorf("got error %v, want ErrNoAPIKey", err)
+	}
+}
+
+func TestGetAPIKey_Priority(t *testing.T) {
+	env, cleanup := setupTestAuth(t)
+	defer cleanup()
+
+	// Set all three sources
+	env.SetEnv(EnvAPIKey, "env_key")
+	env.MockStore.Set("api_key", "keyring_key")
+
+	cfgPath := filepath.Join(env.TempDir, "config.json")
+	os.WriteFile(cfgPath, []byte(`{"api_key": "config_key"}`), 0600)
+
+	// Env should win
+	key, source, _ := GetAPIKey(cfgPath)
+	if key != "env_key" || source != SourceEnv {
+		t.Errorf("env should have priority: got %q from %q", key, source)
+	}
+
+	// Remove env, keyring should win
+	os.Unsetenv(EnvAPIKey)
+	key, source, _ = GetAPIKey(cfgPath)
+	if key != "keyring_key" || source != SourceKeyring {
+		t.Errorf("keyring should have priority over config: got %q from %q", key, source)
+	}
+
+	// Remove keyring, config should win
+	env.MockStore.Delete("api_key")
+	key, source, _ = GetAPIKey(cfgPath)
+	if key != "config_key" || source != SourceConfig {
+		t.Errorf("config should be fallback: got %q from %q", key, source)
 	}
 }

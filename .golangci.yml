@@ -11,8 +11,11 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-    - gofumpt
     - goimports
+
+formatters:
+  enable:
+    - gofumpt
 
 linters-settings:
   goimports:
