@@ -4,3 +4,4 @@ docs/plans/
 .cursor/
 dist/
 notte
+.worktrees/
