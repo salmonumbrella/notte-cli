@@ -4,20 +4,21 @@ package api
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 )
 
 // IdempotencyKeyHeader is the header name for idempotency keys
 const IdempotencyKeyHeader = "Idempotency-Key"
 
-// GenerateIdempotencyKey generates a cryptographically random idempotency key
-func GenerateIdempotencyKey() string {
+// GenerateIdempotencyKey generates a cryptographically random idempotency key.
+// Returns an error if crypto/rand fails (extremely rare).
+func GenerateIdempotencyKey() (string, error) {
 	bytes := make([]byte, 32)
 	if _, err := rand.Read(bytes); err != nil {
-		// Fallback to timestamp-based key if crypto/rand fails
-		panic("crypto/rand failed: " + err.Error())
+		return "", fmt.Errorf("failed to generate idempotency key: %w", err)
 	}
-	return hex.EncodeToString(bytes)
+	return hex.EncodeToString(bytes), nil
 }
 
 // IsMutatingMethod returns true for HTTP methods that modify state
@@ -30,11 +31,15 @@ func IsMutatingMethod(method string) bool {
 	}
 }
 
-// AddIdempotencyKey adds an idempotency key header to mutating requests
+// AddIdempotencyKey adds an idempotency key header to mutating requests.
+// If key generation fails, the request proceeds without an idempotency key.
 func AddIdempotencyKey(req *http.Request) {
 	if IsMutatingMethod(req.Method) {
 		if req.Header.Get(IdempotencyKeyHeader) == "" {
-			req.Header.Set(IdempotencyKeyHeader, GenerateIdempotencyKey())
+			if key, err := GenerateIdempotencyKey(); err == nil {
+				req.Header.Set(IdempotencyKeyHeader, key)
+			}
+			// On error, proceed without idempotency key rather than failing
 		}
 	}
 }

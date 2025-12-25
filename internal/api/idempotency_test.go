@@ -6,8 +6,15 @@ import (
 )
 
 func TestGenerateIdempotencyKey(t *testing.T) {
-	key1 := GenerateIdempotencyKey()
-	key2 := GenerateIdempotencyKey()
+	key1, err := GenerateIdempotencyKey()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	key2, err := GenerateIdempotencyKey()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Should be 64 characters (32 bytes hex encoded)
 	if len(key1) != 64 {
