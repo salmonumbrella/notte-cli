@@ -8,10 +8,10 @@ import (
 )
 
 var (
-	usageShowPeriod string
-	usageLogsEndpoint string
-	usageLogsPage int
-	usageLogsPageSize int
+	usageShowPeriod     string
+	usageLogsEndpoint   string
+	usageLogsPage       int
+	usageLogsPageSize   int
 	usageLogsOnlyActive bool
 )
 

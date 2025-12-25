@@ -17,6 +17,7 @@ var (
 	noColor        bool
 	verbose        bool
 	requestTimeout int
+	yesFlag        bool // Skip confirmation prompts
 
 	// Version set at build time
 	Version = "dev"
@@ -51,6 +52,12 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&noColor, "no-color", false, "Disable color output")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
 	rootCmd.PersistentFlags().IntVar(&requestTimeout, "timeout", 30, "API request timeout in seconds")
+	rootCmd.PersistentFlags().BoolVarP(&yesFlag, "yes", "y", false, "Skip confirmation prompts")
+
+	// Set up confirmation state before each command
+	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		SetSkipConfirmation(yesFlag)
+	}
 
 	// Version command
 	rootCmd.AddCommand(&cobra.Command{

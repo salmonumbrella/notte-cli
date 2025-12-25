@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	DefaultAPIURL = "https://api.notte.cc"
-	ConfigDirName = "notte"
+	DefaultAPIURL  = "https://api.notte.cc"
+	ConfigDirName  = "notte"
 	ConfigFileName = "config.json"
 )
 
