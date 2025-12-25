@@ -180,6 +180,15 @@ func runVaultUpdate(cmd *cobra.Command, args []string) error {
 }
 
 func runVaultDelete(cmd *cobra.Command, args []string) error {
+	// Confirm before deletion
+	confirmed, err := ConfirmAction("vault", vaultID)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		fmt.Println("Cancelled.")
+		return nil
+	}
 
 	client, err := GetClient()
 	if err != nil {
@@ -195,8 +204,8 @@ func runVaultDelete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	fmt.Printf("Vault %s deleted.\n", vaultID)
