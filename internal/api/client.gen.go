@@ -2600,6 +2600,14 @@ type SessionStopParams struct {
 	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
 }
 
+// GetSessionScriptParams defines parameters for GetSessionScript.
+type GetSessionScriptParams struct {
+	// AsWorkflow Whether to return code as standalone workflow or just relevant instructions
+	AsWorkflow          bool    `form:"as_workflow" json:"as_workflow"`
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
 // FileListUploadsParams defines parameters for FileListUploads.
 type FileListUploadsParams struct {
 	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
@@ -7887,6 +7895,9 @@ type ClientInterface interface {
 	// SessionStop request
 	SessionStop(ctx context.Context, sessionId string, params *SessionStopParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetSessionScript request
+	GetSessionScript(ctx context.Context, sessionId string, params *GetSessionScriptParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// FileListUploads request
 	FileListUploads(ctx context.Context, params *FileListUploadsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -8499,6 +8510,18 @@ func (c *Client) SessionReplay(ctx context.Context, sessionId string, params *Se
 
 func (c *Client) SessionStop(ctx context.Context, sessionId string, params *SessionStopParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSessionStopRequest(c.Server, sessionId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetSessionScript(ctx context.Context, sessionId string, params *GetSessionScriptParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSessionScriptRequest(c.Server, sessionId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -11269,6 +11292,84 @@ func NewSessionStopRequest(server string, sessionId string, params *SessionStopP
 	return req, nil
 }
 
+// NewGetSessionScriptRequest generates requests for GetSessionScript
+func NewGetSessionScriptRequest(server string, sessionId string, params *GetSessionScriptParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "session_id", runtime.ParamLocationPath, sessionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/sessions/%s/workflow/code", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "as_workflow", runtime.ParamLocationQuery, params.AsWorkflow); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewFileListUploadsRequest generates requests for FileListUploads
 func NewFileListUploadsRequest(server string, params *FileListUploadsParams) (*http.Request, error) {
 	var err error
@@ -13823,6 +13924,9 @@ type ClientWithResponsesInterface interface {
 	// SessionStopWithResponse request
 	SessionStopWithResponse(ctx context.Context, sessionId string, params *SessionStopParams, reqEditors ...RequestEditorFn) (*SessionStopResult, error)
 
+	// GetSessionScriptWithResponse request
+	GetSessionScriptWithResponse(ctx context.Context, sessionId string, params *GetSessionScriptParams, reqEditors ...RequestEditorFn) (*GetSessionScriptResult, error)
+
 	// FileListUploadsWithResponse request
 	FileListUploadsWithResponse(ctx context.Context, params *FileListUploadsParams, reqEditors ...RequestEditorFn) (*FileListUploadsResult, error)
 
@@ -14656,6 +14760,29 @@ func (r SessionStopResult) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r SessionStopResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSessionScriptResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *AgentWorkflowCodeResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSessionScriptResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSessionScriptResult) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -15751,6 +15878,15 @@ func (c *ClientWithResponses) SessionStopWithResponse(ctx context.Context, sessi
 		return nil, err
 	}
 	return ParseSessionStopResult(rsp)
+}
+
+// GetSessionScriptWithResponse request returning *GetSessionScriptResult
+func (c *ClientWithResponses) GetSessionScriptWithResponse(ctx context.Context, sessionId string, params *GetSessionScriptParams, reqEditors ...RequestEditorFn) (*GetSessionScriptResult, error) {
+	rsp, err := c.GetSessionScript(ctx, sessionId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSessionScriptResult(rsp)
 }
 
 // FileListUploadsWithResponse request returning *FileListUploadsResult
@@ -17098,6 +17234,39 @@ func ParseSessionStopResult(rsp *http.Response) (*SessionStopResult, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest SessionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSessionScriptResult parses an HTTP response from a GetSessionScriptWithResponse call
+func ParseGetSessionScriptResult(rsp *http.Response) (*GetSessionScriptResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSessionScriptResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgentWorkflowCodeResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

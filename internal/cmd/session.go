@@ -101,6 +101,13 @@ var sessionOffsetCmd = &cobra.Command{
 	RunE:  runSessionOffset,
 }
 
+var sessionWorkflowCodeCmd = &cobra.Command{
+	Use:   "workflow-code",
+	Short: "Export session steps as code",
+	Args:  cobra.NoArgs,
+	RunE:  runSessionWorkflowCode,
+}
+
 func init() {
 	rootCmd.AddCommand(sessionCmd)
 
@@ -115,6 +122,7 @@ func init() {
 	sessionCmd.AddCommand(sessionNetworkCmd)
 	sessionCmd.AddCommand(sessionReplayCmd)
 	sessionCmd.AddCommand(sessionOffsetCmd)
+	sessionCmd.AddCommand(sessionWorkflowCodeCmd)
 
 	// Persistent flag for session ID (required for all subcommands)
 	sessionCmd.PersistentFlags().StringVar(&sessionID, "id", "", "Session ID (required)")
@@ -133,7 +141,6 @@ func init() {
 }
 
 func runSessionStatus(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -188,7 +195,6 @@ func runSessionStop(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionObserve(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -216,7 +222,6 @@ func runSessionObserve(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionExecute(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -252,7 +257,6 @@ func runSessionExecute(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionScrape(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -283,7 +287,6 @@ func runSessionScrape(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionCookies(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -306,7 +309,6 @@ func runSessionCookies(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionCookiesSet(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -341,7 +343,6 @@ func runSessionCookiesSet(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionDebug(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -364,7 +365,6 @@ func runSessionDebug(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionNetwork(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -387,7 +387,6 @@ func runSessionNetwork(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionReplay(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -415,7 +414,6 @@ func runSessionReplay(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionOffset(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -426,6 +424,30 @@ func runSessionOffset(cmd *cobra.Command, args []string) error {
 
 	params := &api.SessionOffsetParams{}
 	resp, err := client.Client().SessionOffsetWithResponse(ctx, sessionID, params)
+	if err != nil {
+		return fmt.Errorf("API request failed: %w", err)
+	}
+
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
+	}
+
+	return GetFormatter().Print(resp.JSON200)
+}
+
+func runSessionWorkflowCode(cmd *cobra.Command, args []string) error {
+	client, err := GetClient()
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := GetContextWithTimeout(cmd.Context())
+	defer cancel()
+
+	params := &api.GetSessionScriptParams{
+		AsWorkflow: true,
+	}
+	resp, err := client.Client().GetSessionScriptWithResponse(ctx, sessionID, params)
 	if err != nil {
 		return fmt.Errorf("API request failed: %w", err)
 	}
