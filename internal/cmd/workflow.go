@@ -217,6 +217,14 @@ func runWorkflowUpdate(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowDelete(cmd *cobra.Command, args []string) error {
+	confirmed, err := ConfirmAction("workflow", workflowID)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		fmt.Println("Cancelled.")
+		return nil
+	}
 
 	client, err := GetClient()
 	if err != nil {

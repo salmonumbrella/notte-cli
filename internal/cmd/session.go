@@ -156,6 +156,14 @@ func runSessionStatus(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionStop(cmd *cobra.Command, args []string) error {
+	confirmed, err := ConfirmAction("session", sessionID)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		fmt.Println("Cancelled.")
+		return nil
+	}
 
 	client, err := GetClient()
 	if err != nil {

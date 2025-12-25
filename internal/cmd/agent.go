@@ -77,6 +77,14 @@ func runAgentStatus(cmd *cobra.Command, args []string) error {
 }
 
 func runAgentStop(cmd *cobra.Command, args []string) error {
+	confirmed, err := ConfirmAction("agent", agentID)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		fmt.Println("Cancelled.")
+		return nil
+	}
 
 	client, err := GetClient()
 	if err != nil {

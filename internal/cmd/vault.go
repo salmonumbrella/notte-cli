@@ -331,6 +331,14 @@ func runVaultCredentialsGet(cmd *cobra.Command, args []string) error {
 }
 
 func runVaultCredentialsDelete(cmd *cobra.Command, args []string) error {
+	confirmed, err := ConfirmAction("credentials for", vaultCredentialsDeleteURL)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		fmt.Println("Cancelled.")
+		return nil
+	}
 
 	client, err := GetClient()
 	if err != nil {
@@ -427,6 +435,14 @@ func runVaultCardSet(cmd *cobra.Command, args []string) error {
 }
 
 func runVaultCardDelete(cmd *cobra.Command, args []string) error {
+	confirmed, err := ConfirmAction("credit card from vault", vaultID)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		fmt.Println("Cancelled.")
+		return nil
+	}
 
 	client, err := GetClient()
 	if err != nil {

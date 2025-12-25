@@ -96,6 +96,14 @@ func runPersonaShow(cmd *cobra.Command, args []string) error {
 }
 
 func runPersonaDelete(cmd *cobra.Command, args []string) error {
+	confirmed, err := ConfirmAction("persona", personaID)
+	if err != nil {
+		return err
+	}
+	if !confirmed {
+		fmt.Println("Cancelled.")
+		return nil
+	}
 
 	client, err := GetClient()
 	if err != nil {
