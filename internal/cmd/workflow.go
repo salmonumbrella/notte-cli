@@ -158,8 +158,8 @@ func runWorkflowShow(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -209,8 +209,8 @@ func runWorkflowUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -240,8 +240,8 @@ func runWorkflowDelete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	fmt.Printf("Workflow %s deleted.\n", workflowID)
@@ -264,8 +264,8 @@ func runWorkflowRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -287,8 +287,8 @@ func runWorkflowRuns(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	if resp.JSON200 == nil || len(resp.JSON200.Items) == 0 {
@@ -315,8 +315,8 @@ func runWorkflowFork(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -338,8 +338,8 @@ func runWorkflowRunStop(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -361,8 +361,8 @@ func runWorkflowRunMetadata(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -390,8 +390,8 @@ func runWorkflowRunMetadataUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -417,8 +417,8 @@ func runWorkflowSchedule(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	fmt.Printf("Workflow %s scheduled with cron expression: %s\n", workflowID, cronExpression)
@@ -441,8 +441,8 @@ func runWorkflowUnschedule(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	fmt.Printf("Workflow %s schedule removed.\n", workflowID)

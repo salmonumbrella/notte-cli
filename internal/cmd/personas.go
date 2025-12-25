@@ -54,8 +54,8 @@ func runPersonasList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	formatter := GetFormatter()
@@ -96,8 +96,8 @@ func runPersonasCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	formatter := GetFormatter()

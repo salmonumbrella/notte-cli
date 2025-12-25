@@ -172,8 +172,8 @@ func runVaultUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -228,8 +228,8 @@ func runVaultCredentialsList(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	formatter := GetFormatter()
@@ -297,8 +297,8 @@ func runVaultCredentialsAdd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -323,8 +323,8 @@ func runVaultCredentialsGet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -357,8 +357,8 @@ func runVaultCredentialsDelete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	fmt.Printf("Credentials for URL %s deleted from vault %s.\n", vaultCredentialsDeleteURL, vaultID)
@@ -381,8 +381,8 @@ func runVaultCard(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -427,8 +427,8 @@ func runVaultCardSet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -458,8 +458,8 @@ func runVaultCardDelete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	fmt.Printf("Credit card deleted from vault %s.\n", vaultID)

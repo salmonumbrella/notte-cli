@@ -148,8 +148,8 @@ func runSessionStatus(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -179,8 +179,8 @@ func runSessionStop(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	fmt.Printf("Session %s stopped.\n", sessionID)
@@ -208,8 +208,8 @@ func runSessionObserve(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -244,8 +244,8 @@ func runSessionExecute(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -275,8 +275,8 @@ func runSessionScrape(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -298,8 +298,8 @@ func runSessionCookies(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -333,8 +333,8 @@ func runSessionCookiesSet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -356,8 +356,8 @@ func runSessionDebug(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -379,8 +379,8 @@ func runSessionNetwork(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
@@ -402,8 +402,8 @@ func runSessionReplay(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	// Wrap raw body for formatter compatibility
@@ -430,8 +430,8 @@ func runSessionOffset(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("API request failed: %w", err)
 	}
 
-	if resp.StatusCode() != 200 {
-		return fmt.Errorf("API error: %s", resp.Status())
+	if err := HandleAPIResponse(resp.HTTPResponse); err != nil {
+		return err
 	}
 
 	return GetFormatter().Print(resp.JSON200)
