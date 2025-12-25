@@ -69,11 +69,10 @@ func init() {
 
 	// Persistent flag for persona ID (required for all subcommands)
 	personaCmd.PersistentFlags().StringVar(&personaID, "id", "", "Persona ID (required)")
-	personaCmd.MarkPersistentFlagRequired("id")
+	_ = personaCmd.MarkPersistentFlagRequired("id")
 }
 
 func runPersonaShow(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -128,7 +127,6 @@ func runPersonaDelete(cmd *cobra.Command, args []string) error {
 }
 
 func runPersonaEmails(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -151,7 +149,6 @@ func runPersonaEmails(cmd *cobra.Command, args []string) error {
 }
 
 func runPersonaSms(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -174,7 +171,6 @@ func runPersonaSms(cmd *cobra.Command, args []string) error {
 }
 
 func runPersonaPhoneCreate(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -197,7 +193,6 @@ func runPersonaPhoneCreate(cmd *cobra.Command, args []string) error {
 }
 
 func runPersonaPhoneDelete(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err

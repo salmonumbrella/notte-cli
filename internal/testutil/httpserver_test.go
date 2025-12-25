@@ -17,7 +17,7 @@ func TestMockServer_ReturnsResponse(t *testing.T) {
 	if err != nil {
 		t.Fatalf("request failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		t.Errorf("got status %d, want %d", resp.StatusCode, http.StatusOK)
@@ -35,8 +35,14 @@ func TestMockServer_TracksRequests(t *testing.T) {
 
 	server.AddResponse("/api/sessions", http.StatusOK, `{}`)
 
-	http.Get(server.URL() + "/api/sessions")
-	http.Get(server.URL() + "/api/sessions")
+	resp1, _ := http.Get(server.URL() + "/api/sessions")
+	if resp1 != nil {
+		_ = resp1.Body.Close()
+	}
+	resp2, _ := http.Get(server.URL() + "/api/sessions")
+	if resp2 != nil {
+		_ = resp2.Body.Close()
+	}
 
 	requests := server.Requests("/api/sessions")
 	if len(requests) != 2 {
@@ -52,7 +58,7 @@ func TestMockServer_Returns404ForUnknownPaths(t *testing.T) {
 	if err != nil {
 		t.Fatalf("request failed: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusNotFound {
 		t.Errorf("got status %d, want %d", resp.StatusCode, http.StatusNotFound)

@@ -43,7 +43,7 @@ func init() {
 	workflowsCmd.AddCommand(workflowsCreateCmd)
 
 	workflowsCreateCmd.Flags().StringVar(&workflowsCreateFile, "file", "", "Path to workflow file (required)")
-	workflowsCreateCmd.MarkFlagRequired("file")
+	_ = workflowsCreateCmd.MarkFlagRequired("file")
 	workflowsCreateCmd.Flags().StringVar(&workflowsCreateName, "name", "", "Workflow name")
 	workflowsCreateCmd.Flags().StringVar(&workflowsCreateDescription, "description", "", "Workflow description")
 	workflowsCreateCmd.Flags().BoolVar(&workflowsCreateShared, "shared", false, "Make workflow public")
@@ -89,7 +89,7 @@ func runWorkflowsCreate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Create multipart form data
 	var buf bytes.Buffer
@@ -121,7 +121,7 @@ func runWorkflowsCreate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	writer.Close()
+	_ = writer.Close()
 
 	ctx, cancel := GetContextWithTimeout(cmd.Context())
 	defer cancel()

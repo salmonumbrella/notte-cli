@@ -118,11 +118,11 @@ func init() {
 
 	// Persistent flag for vault ID (required for all subcommands)
 	vaultCmd.PersistentFlags().StringVar(&vaultID, "id", "", "Vault ID (required)")
-	vaultCmd.MarkPersistentFlagRequired("id")
+	_ = vaultCmd.MarkPersistentFlagRequired("id")
 
 	// Update command flags
 	vaultUpdateCmd.Flags().StringVar(&vaultUpdateName, "name", "", "New name for the vault (required)")
-	vaultUpdateCmd.MarkFlagRequired("name")
+	_ = vaultUpdateCmd.MarkFlagRequired("name")
 
 	// Credentials add command flags
 	vaultCredentialsAddCmd.Flags().StringVar(&vaultCredentialsAddURL, "url", "", "URL for the credentials (required)")
@@ -130,30 +130,29 @@ func init() {
 	vaultCredentialsAddCmd.Flags().StringVar(&vaultCredentialsAddUsername, "username", "", "Username for the credentials")
 	vaultCredentialsAddCmd.Flags().StringVar(&vaultCredentialsAddPassword, "password", "", "Password for the credentials (required)")
 	vaultCredentialsAddCmd.Flags().StringVar(&vaultCredentialsAddMFA, "mfa-secret", "", "MFA secret for the credentials")
-	vaultCredentialsAddCmd.MarkFlagRequired("url")
-	vaultCredentialsAddCmd.MarkFlagRequired("password")
+	_ = vaultCredentialsAddCmd.MarkFlagRequired("url")
+	_ = vaultCredentialsAddCmd.MarkFlagRequired("password")
 
 	// Credentials get command flags
 	vaultCredentialsGetCmd.Flags().StringVar(&vaultCredentialsGetURL, "url", "", "URL to get credentials for (required)")
-	vaultCredentialsGetCmd.MarkFlagRequired("url")
+	_ = vaultCredentialsGetCmd.MarkFlagRequired("url")
 
 	// Credentials delete command flags
 	vaultCredentialsDeleteCmd.Flags().StringVar(&vaultCredentialsDeleteURL, "url", "", "URL to delete credentials for (required)")
-	vaultCredentialsDeleteCmd.MarkFlagRequired("url")
+	_ = vaultCredentialsDeleteCmd.MarkFlagRequired("url")
 
 	// Card set command flags
 	vaultCardSetCmd.Flags().StringVar(&vaultCardSetNumber, "number", "", "Credit card number (required)")
 	vaultCardSetCmd.Flags().StringVar(&vaultCardSetExpiry, "expiry", "", "Card expiration date (e.g., 12/25) (required)")
 	vaultCardSetCmd.Flags().StringVar(&vaultCardSetCVV, "cvv", "", "Card CVV (required)")
 	vaultCardSetCmd.Flags().StringVar(&vaultCardSetName, "name", "", "Cardholder name (required)")
-	vaultCardSetCmd.MarkFlagRequired("number")
-	vaultCardSetCmd.MarkFlagRequired("expiry")
-	vaultCardSetCmd.MarkFlagRequired("cvv")
-	vaultCardSetCmd.MarkFlagRequired("name")
+	_ = vaultCardSetCmd.MarkFlagRequired("number")
+	_ = vaultCardSetCmd.MarkFlagRequired("expiry")
+	_ = vaultCardSetCmd.MarkFlagRequired("cvv")
+	_ = vaultCardSetCmd.MarkFlagRequired("name")
 }
 
 func runVaultUpdate(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -213,7 +212,6 @@ func runVaultDelete(cmd *cobra.Command, args []string) error {
 }
 
 func runVaultCredentialsList(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -243,7 +241,6 @@ func runVaultCredentialsList(cmd *cobra.Command, args []string) error {
 }
 
 func runVaultCredentialsAdd(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -305,7 +302,6 @@ func runVaultCredentialsAdd(cmd *cobra.Command, args []string) error {
 }
 
 func runVaultCredentialsGet(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -366,7 +362,6 @@ func runVaultCredentialsDelete(cmd *cobra.Command, args []string) error {
 }
 
 func runVaultCard(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -389,7 +384,6 @@ func runVaultCard(cmd *cobra.Command, args []string) error {
 }
 
 func runVaultCardSet(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err

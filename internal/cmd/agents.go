@@ -45,7 +45,7 @@ func init() {
 	agentsStartCmd.Flags().StringVar(&agentsStartPersona, "persona", "", "Persona ID to use")
 	agentsStartCmd.Flags().IntVar(&agentsStartMaxSteps, "max-steps", 30, "Maximum steps")
 	agentsStartCmd.Flags().StringVar(&agentsStartReasoningModel, "reasoning-model", "", "Reasoning model to use")
-	agentsStartCmd.MarkFlagRequired("task")
+	_ = agentsStartCmd.MarkFlagRequired("task")
 }
 
 func runAgentsList(cmd *cobra.Command, args []string) error {

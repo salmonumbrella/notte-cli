@@ -63,7 +63,7 @@ func init() {
 	// Download command flags
 	filesDownloadCmd.Flags().StringVar(&filesDownloadSession, "session", "", "Session ID (required)")
 	filesDownloadCmd.Flags().StringVarP(&filesDownloadOutput, "output", "o", "", "Output file path (defaults to current directory)")
-	filesDownloadCmd.MarkFlagRequired("session")
+	_ = filesDownloadCmd.MarkFlagRequired("session")
 }
 
 func runFilesList(cmd *cobra.Command, args []string) error {
@@ -146,7 +146,7 @@ func runFilesUpload(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Create multipart form data in memory (simpler, no race condition)
 	var buf bytes.Buffer
@@ -161,7 +161,7 @@ func runFilesUpload(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to copy file data: %w", err)
 	}
 
-	writer.Close()
+	_ = writer.Close()
 
 	// Get the filename to use in the API call
 	filename := filepath.Base(filePath)
@@ -231,7 +231,7 @@ func runFilesDownload(cmd *cobra.Command, args []string) error {
 	}
 
 	// Write the file
-	err = os.WriteFile(outputPath, resp.Body, 0644)
+	err = os.WriteFile(outputPath, resp.Body, 0o644)
 	if err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}

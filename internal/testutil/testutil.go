@@ -29,15 +29,15 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 	// Clear auth-related env vars
 	for _, key := range []string{"NOTTE_API_KEY", "NOTTE_API_URL"} {
 		env.origEnv[key] = os.Getenv(key)
-		os.Unsetenv(key)
+		_ = os.Unsetenv(key)
 	}
 
 	t.Cleanup(func() {
 		for key, val := range env.origEnv {
 			if val != "" {
-				os.Setenv(key, val)
+				_ = os.Setenv(key, val)
 			} else {
-				os.Unsetenv(key)
+				_ = os.Unsetenv(key)
 			}
 		}
 	})
@@ -51,7 +51,7 @@ func (e *TestEnv) SetEnv(key, value string) {
 	if _, exists := e.origEnv[key]; !exists {
 		e.origEnv[key] = os.Getenv(key)
 	}
-	os.Setenv(key, value)
+	_ = os.Setenv(key, value)
 }
 
 // CaptureOutput captures stdout and stderr during function execution
@@ -67,12 +67,12 @@ func CaptureOutput(fn func()) (stdout, stderr string) {
 
 	fn()
 
-	wOut.Close()
-	wErr.Close()
+	_ = wOut.Close()
+	_ = wErr.Close()
 
 	var bufOut, bufErr bytes.Buffer
-	bufOut.ReadFrom(rOut)
-	bufErr.ReadFrom(rErr)
+	_, _ = bufOut.ReadFrom(rOut)
+	_, _ = bufErr.ReadFrom(rErr)
 
 	os.Stdout = oldStdout
 	os.Stderr = oldStderr

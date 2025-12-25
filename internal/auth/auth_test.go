@@ -63,7 +63,7 @@ func TestGetAPIKey_Keyring(t *testing.T) {
 	defer cleanup()
 
 	// Store key in mock keyring
-	env.MockStore.Set("api_key", "keyring_test_key")
+	_ = env.MockStore.Set("api_key", "keyring_test_key")
 
 	key, source, err := GetAPIKey("")
 	if err != nil {
@@ -84,7 +84,7 @@ func TestGetAPIKey_ConfigFile(t *testing.T) {
 	// No env var, no keyring - should fall through to config
 	cfgPath := filepath.Join(env.TempDir, "config.json")
 	content := `{"api_key": "config_test_key"}`
-	if err := os.WriteFile(cfgPath, []byte(content), 0600); err != nil {
+	if err := os.WriteFile(cfgPath, []byte(content), 0o600); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
 
@@ -121,10 +121,10 @@ func TestGetAPIKey_Priority(t *testing.T) {
 
 	// Set all three sources
 	env.SetEnv(EnvAPIKey, "env_key")
-	env.MockStore.Set("api_key", "keyring_key")
+	_ = env.MockStore.Set("api_key", "keyring_key")
 
 	cfgPath := filepath.Join(env.TempDir, "config.json")
-	os.WriteFile(cfgPath, []byte(`{"api_key": "config_key"}`), 0600)
+	_ = os.WriteFile(cfgPath, []byte(`{"api_key": "config_key"}`), 0o600)
 
 	// Env should win
 	key, source, _ := GetAPIKey(cfgPath)
@@ -133,14 +133,14 @@ func TestGetAPIKey_Priority(t *testing.T) {
 	}
 
 	// Remove env, keyring should win
-	os.Unsetenv(EnvAPIKey)
+	_ = os.Unsetenv(EnvAPIKey)
 	key, source, _ = GetAPIKey(cfgPath)
 	if key != "keyring_key" || source != SourceKeyring {
 		t.Errorf("keyring should have priority over config: got %q from %q", key, source)
 	}
 
 	// Remove keyring, config should win
-	env.MockStore.Delete("api_key")
+	_ = env.MockStore.Delete("api_key")
 	key, source, _ = GetAPIKey(cfgPath)
 	if key != "config_key" || source != SourceConfig {
 		t.Errorf("config should be fallback: got %q from %q", key, source)

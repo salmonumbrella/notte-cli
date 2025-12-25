@@ -39,7 +39,7 @@ func init() {
 	scrapeCmd.Flags().BoolVar(&scrapeOnlyMain, "only-main-content", false, "Only main content")
 
 	scrapeHtmlCmd.Flags().StringVar(&scrapeHtmlFile, "file", "", "Path to HTML file (required)")
-	scrapeHtmlCmd.MarkFlagRequired("file")
+	_ = scrapeHtmlCmd.MarkFlagRequired("file")
 	scrapeHtmlCmd.Flags().StringVar(&scrapeHtmlInstructions, "instructions", "", "Extraction instructions")
 }
 

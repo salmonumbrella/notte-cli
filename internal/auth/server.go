@@ -33,7 +33,7 @@ type SetupServer struct {
 // NewSetupServer creates a new setup server
 func NewSetupServer() *SetupServer {
 	tokenBytes := make([]byte, 32)
-	rand.Read(tokenBytes)
+	_, _ = rand.Read(tokenBytes)
 
 	return &SetupServer{
 		result:    make(chan SetupResult, 1),
@@ -66,20 +66,22 @@ func (s *SetupServer) Start(ctx context.Context) (*SetupResult, error) {
 	}
 
 	go func() {
-		server.Serve(listener)
+		_ = server.Serve(listener)
 	}()
 
-	go openBrowser(baseURL)
+	go func() {
+		_ = openBrowser(baseURL)
+	}()
 
 	select {
 	case result := <-s.result:
-		server.Shutdown(context.Background())
+		_ = server.Shutdown(context.Background())
 		return &result, nil
 	case <-ctx.Done():
-		server.Shutdown(context.Background())
+		_ = server.Shutdown(context.Background())
 		return nil, ctx.Err()
 	case <-s.shutdown:
-		server.Shutdown(context.Background())
+		_ = server.Shutdown(context.Background())
 		if s.pendingResult != nil {
 			return s.pendingResult, nil
 		}
@@ -104,7 +106,7 @@ func (s *SetupServer) handleSetup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tmpl.Execute(w, data)
+	_ = tmpl.Execute(w, data)
 }
 
 func (s *SetupServer) handleValidate(w http.ResponseWriter, r *http.Request) {
@@ -245,7 +247,7 @@ func (s *SetupServer) handleSuccess(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	tmpl.Execute(w, nil)
+	_ = tmpl.Execute(w, nil)
 }
 
 func (s *SetupServer) handleComplete(w http.ResponseWriter, r *http.Request) {
@@ -259,7 +261,7 @@ func (s *SetupServer) handleComplete(w http.ResponseWriter, r *http.Request) {
 func writeJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(data)
+	_ = json.NewEncoder(w).Encode(data)
 }
 
 func openBrowser(url string) error {

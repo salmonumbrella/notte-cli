@@ -7,9 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	vaultsCreateName string
-)
+var vaultsCreateName string
 
 var vaultsCmd = &cobra.Command{
 	Use:   "vaults",

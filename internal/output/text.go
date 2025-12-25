@@ -49,7 +49,7 @@ func (f *TextFormatter) printKeyValue(data any) error {
 	for _, key := range v.MapKeys() {
 		val := v.MapIndex(key)
 		label := f.colorize(fmt.Sprintf("%v:", key.Interface()), termenv.ANSICyan)
-		fmt.Fprintf(w, "%s\t%v\n", label, val.Interface())
+		_, _ = fmt.Fprintf(w, "%s\t%v\n", label, val.Interface())
 	}
 
 	return w.Flush()
@@ -66,7 +66,7 @@ func (f *TextFormatter) printStruct(data any) error {
 			continue
 		}
 		label := f.colorize(field.Name+":", termenv.ANSICyan)
-		fmt.Fprintf(w, "%s\t%v\n", label, v.Field(i).Interface())
+		_, _ = fmt.Fprintf(w, "%s\t%v\n", label, v.Field(i).Interface())
 	}
 
 	return w.Flush()
@@ -80,7 +80,7 @@ func (f *TextFormatter) printSlice(data any) error {
 			return err
 		}
 		if i < v.Len()-1 {
-			fmt.Fprintln(f.Writer)
+			_, _ = fmt.Fprintln(f.Writer)
 		}
 	}
 	return nil
@@ -95,7 +95,7 @@ func (f *TextFormatter) PrintTable(headers []string, data []map[string]any) erro
 	for i, h := range headers {
 		coloredHeaders[i] = f.colorize(h, termenv.ANSICyan)
 	}
-	fmt.Fprintln(w, strings.Join(coloredHeaders, "\t"))
+	_, _ = fmt.Fprintln(w, strings.Join(coloredHeaders, "\t"))
 
 	// Print rows
 	for _, row := range data {
@@ -105,7 +105,7 @@ func (f *TextFormatter) PrintTable(headers []string, data []map[string]any) erro
 				values[i] = fmt.Sprintf("%v", v)
 			}
 		}
-		fmt.Fprintln(w, strings.Join(values, "\t"))
+		_, _ = fmt.Fprintln(w, strings.Join(values, "\t"))
 	}
 
 	return w.Flush()

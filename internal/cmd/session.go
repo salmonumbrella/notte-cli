@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -126,18 +127,18 @@ func init() {
 
 	// Persistent flag for session ID (required for all subcommands)
 	sessionCmd.PersistentFlags().StringVar(&sessionID, "id", "", "Session ID (required)")
-	sessionCmd.MarkPersistentFlagRequired("id")
+	_ = sessionCmd.MarkPersistentFlagRequired("id")
 
 	sessionObserveCmd.Flags().StringVar(&sessionObserveURL, "url", "", "Navigate to URL before observing")
 
 	sessionExecuteCmd.Flags().StringVar(&sessionExecuteAction, "action", "", "Action JSON (required)")
-	sessionExecuteCmd.MarkFlagRequired("action")
+	_ = sessionExecuteCmd.MarkFlagRequired("action")
 
 	sessionScrapeCmd.Flags().StringVar(&sessionScrapeInstructions, "instructions", "", "Extraction instructions")
 	sessionScrapeCmd.Flags().BoolVar(&sessionScrapeOnlyMain, "only-main-content", false, "Only scrape main content")
 
 	sessionCookiesSetCmd.Flags().StringVar(&sessionCookiesSetFile, "file", "", "JSON file containing cookies array (required)")
-	sessionCookiesSetCmd.MarkFlagRequired("file")
+	_ = sessionCookiesSetCmd.MarkFlagRequired("file")
 }
 
 func runSessionStatus(cmd *cobra.Command, args []string) error {
@@ -230,21 +231,14 @@ func runSessionExecute(cmd *cobra.Command, args []string) error {
 	ctx, cancel := GetContextWithTimeout(cmd.Context())
 	defer cancel()
 
-	// Parse action JSON
+	// Validate action JSON
 	var actionData json.RawMessage
 	if err := json.Unmarshal([]byte(sessionExecuteAction), &actionData); err != nil {
 		return fmt.Errorf("invalid action JSON: %w", err)
 	}
 
-	// PageExecuteJSONBody is a union type, so we need to create it properly
-	body := api.PageExecuteJSONRequestBody{}
-	// The union is stored as json.RawMessage, so we need to marshal the action data
-	if err := json.Unmarshal(actionData, &body); err != nil {
-		return fmt.Errorf("failed to create request body: %w", err)
-	}
-
 	params := &api.PageExecuteParams{}
-	resp, err := client.Client().PageExecuteWithResponse(ctx, sessionID, params, body)
+	resp, err := client.Client().PageExecuteWithBodyWithResponse(ctx, sessionID, params, "application/json", bytes.NewReader(actionData))
 	if err != nil {
 		return fmt.Errorf("API request failed: %w", err)
 	}

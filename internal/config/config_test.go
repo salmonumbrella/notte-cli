@@ -26,7 +26,7 @@ func TestLoadConfig_WithValues(t *testing.T) {
 	cfgPath := filepath.Join(tmpDir, "config.json")
 
 	content := `{"api_key": "test_key_123", "api_url": "https://custom.api.com"}`
-	if err := os.WriteFile(cfgPath, []byte(content), 0600); err != nil {
+	if err := os.WriteFile(cfgPath, []byte(content), 0o600); err != nil {
 		t.Fatalf("failed to write config: %v", err)
 	}
 

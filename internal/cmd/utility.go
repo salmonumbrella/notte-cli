@@ -7,9 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	promptText string
-)
+var promptText string
 
 var healthCmd = &cobra.Command{
 	Use:   "health",
@@ -39,10 +37,10 @@ func init() {
 
 	// Add --text flag to prompt commands
 	promptImproveCmd.Flags().StringVar(&promptText, "text", "", "Prompt text to improve (required)")
-	promptImproveCmd.MarkFlagRequired("text")
+	_ = promptImproveCmd.MarkFlagRequired("text")
 
 	promptNudgeCmd.Flags().StringVar(&promptText, "text", "", "Prompt text to get nudges for (required)")
-	promptNudgeCmd.MarkFlagRequired("text")
+	_ = promptNudgeCmd.MarkFlagRequired("text")
 }
 
 func runHealth(cmd *cobra.Command, args []string) error {

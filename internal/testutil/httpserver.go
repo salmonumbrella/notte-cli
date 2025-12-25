@@ -46,7 +46,7 @@ func NewMockServer() *MockServer {
 
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(`{"error": "not found"}`))
+			_, _ = w.Write([]byte(`{"error": "not found"}`))
 			return
 		}
 
@@ -54,7 +54,7 @@ func NewMockServer() *MockServer {
 			w.Header().Set(key, val)
 		}
 		w.WriteHeader(resp.StatusCode)
-		w.Write([]byte(resp.Body))
+		_, _ = w.Write([]byte(resp.Body))
 	}))
 
 	return ms

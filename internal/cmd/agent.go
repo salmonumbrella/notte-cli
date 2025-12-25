@@ -7,9 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	agentID string
-)
+var agentID string
 
 var agentCmd = &cobra.Command{
 	Use:   "agent",
@@ -50,11 +48,10 @@ func init() {
 
 	// Persistent flag for agent ID (required for all subcommands)
 	agentCmd.PersistentFlags().StringVar(&agentID, "id", "", "Agent ID (required)")
-	agentCmd.MarkPersistentFlagRequired("id")
+	_ = agentCmd.MarkPersistentFlagRequired("id")
 }
 
 func runAgentStatus(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -111,7 +108,6 @@ func runAgentStop(cmd *cobra.Command, args []string) error {
 }
 
 func runAgentWorkflowCode(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -136,7 +132,6 @@ func runAgentWorkflowCode(cmd *cobra.Command, args []string) error {
 }
 
 func runAgentReplay(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err

@@ -121,29 +121,28 @@ func init() {
 
 	// Persistent flag for workflow ID (required for all subcommands)
 	workflowCmd.PersistentFlags().StringVar(&workflowID, "id", "", "Workflow ID (required)")
-	workflowCmd.MarkPersistentFlagRequired("id")
+	_ = workflowCmd.MarkPersistentFlagRequired("id")
 
 	workflowUpdateCmd.Flags().StringVar(&workflowUpdateFile, "file", "", "Path to updated workflow file (required)")
-	workflowUpdateCmd.MarkFlagRequired("file")
+	_ = workflowUpdateCmd.MarkFlagRequired("file")
 
 	// Flags for run control commands
 	workflowRunStopCmd.Flags().StringVar(&runID, "run-id", "", "Run ID (required)")
-	workflowRunStopCmd.MarkFlagRequired("run-id")
+	_ = workflowRunStopCmd.MarkFlagRequired("run-id")
 
 	workflowRunMetadataCmd.Flags().StringVar(&runID, "run-id", "", "Run ID (required)")
-	workflowRunMetadataCmd.MarkFlagRequired("run-id")
+	_ = workflowRunMetadataCmd.MarkFlagRequired("run-id")
 
 	workflowRunMetadataUpdateCmd.Flags().StringVar(&runID, "run-id", "", "Run ID (required)")
-	workflowRunMetadataUpdateCmd.MarkFlagRequired("run-id")
+	_ = workflowRunMetadataUpdateCmd.MarkFlagRequired("run-id")
 	workflowRunMetadataUpdateCmd.Flags().StringVar(&metadataJSON, "data", "", "JSON metadata to update (required)")
-	workflowRunMetadataUpdateCmd.MarkFlagRequired("data")
+	_ = workflowRunMetadataUpdateCmd.MarkFlagRequired("data")
 
 	workflowScheduleCmd.Flags().StringVar(&cronExpression, "cron", "", "Cron expression (required)")
-	workflowScheduleCmd.MarkFlagRequired("cron")
+	_ = workflowScheduleCmd.MarkFlagRequired("cron")
 }
 
 func runWorkflowShow(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -166,7 +165,6 @@ func runWorkflowShow(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowUpdate(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -177,7 +175,7 @@ func runWorkflowUpdate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	// Create multipart form data
 	var buf bytes.Buffer
@@ -192,7 +190,7 @@ func runWorkflowUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to copy file data: %w", err)
 	}
 
-	writer.Close()
+	_ = writer.Close()
 
 	ctx, cancel := GetContextWithTimeout(cmd.Context())
 	defer cancel()
@@ -249,7 +247,6 @@ func runWorkflowDelete(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowRun(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -272,7 +269,6 @@ func runWorkflowRun(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowRuns(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -300,7 +296,6 @@ func runWorkflowRuns(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowFork(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -323,7 +318,6 @@ func runWorkflowFork(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowRunStop(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -346,7 +340,6 @@ func runWorkflowRunStop(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowRunMetadata(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -369,7 +362,6 @@ func runWorkflowRunMetadata(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowRunMetadataUpdate(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -398,7 +390,6 @@ func runWorkflowRunMetadataUpdate(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowSchedule(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
@@ -426,7 +417,6 @@ func runWorkflowSchedule(cmd *cobra.Command, args []string) error {
 }
 
 func runWorkflowUnschedule(cmd *cobra.Command, args []string) error {
-
 	client, err := GetClient()
 	if err != nil {
 		return err
