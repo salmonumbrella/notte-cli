@@ -63,6 +63,7 @@ changelog:
 
 brews:
   - name: notte-cli
+    skip_upload: true
     repository:
       owner: salmonumbrella
       name: homebrew-tap
