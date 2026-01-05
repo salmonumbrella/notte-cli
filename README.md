@@ -344,6 +344,38 @@ notte sessions list --output json | jq '.sessions[] | select(.status=="ACTIVE")'
 notte sessions list --output json | jq -r '.sessions[].id'
 ```
 
+### Advanced Usage
+
+#### Heredoc for Complex JSON
+
+For multi-line JSON payloads, use heredoc syntax:
+
+```bash
+# Execute a complex action with heredoc
+notte session execute --id $SESSION_ID --action - << 'EOF'
+{
+  "action": "fill_form",
+  "fields": [
+    {"selector": "#name", "value": "John Doe"},
+    {"selector": "#email", "value": "john@example.com"},
+    {"selector": "#message", "value": "Hello,\nThis is a multi-line message."}
+  ]
+}
+EOF
+
+# Update workflow metadata with heredoc
+notte workflow run-metadata-update --id $WORKFLOW_ID --run-id $RUN_ID --data - << 'EOF'
+{
+  "status": "processing",
+  "progress": 75,
+  "results": {
+    "items_processed": 150,
+    "errors": []
+  }
+}
+EOF
+```
+
 ## Global Flags
 
 All commands support these flags:

@@ -46,3 +46,20 @@ func TestPrintListOrEmpty_Text(t *testing.T) {
 		t.Fatalf("unexpected stdout: %q", stdout)
 	}
 }
+
+func TestPrintListOrEmpty_NonSlice(t *testing.T) {
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	printed, err := PrintListOrEmpty("not a slice", "No files.")
+	if err == nil {
+		t.Fatalf("expected error for non-slice type")
+	}
+	if printed {
+		t.Fatalf("expected printed=false for non-slice type")
+	}
+	if !strings.Contains(err.Error(), "expected slice") {
+		t.Fatalf("unexpected error message: %v", err)
+	}
+}

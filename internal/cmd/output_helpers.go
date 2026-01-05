@@ -6,10 +6,13 @@ import (
 	"reflect"
 )
 
+// IsJSONOutput returns true if the global output format is set to JSON.
 func IsJSONOutput() bool {
 	return outputFormat == "json"
 }
 
+// PrintInfo prints an informational message to stdout in text mode,
+// or to stderr in JSON mode to keep stdout clean for machine parsing.
 func PrintInfo(message string) {
 	if IsJSONOutput() {
 		_, _ = fmt.Fprintln(os.Stderr, message)
@@ -18,6 +21,8 @@ func PrintInfo(message string) {
 	_, _ = fmt.Fprintln(os.Stdout, message)
 }
 
+// PrintResult prints a success result. In JSON mode, outputs structured data
+// to stdout. In text mode, prints the human-readable message.
 func PrintResult(message string, data map[string]any) error {
 	if IsJSONOutput() {
 		if data == nil {
@@ -36,6 +41,10 @@ func PrintResult(message string, data map[string]any) error {
 	return err
 }
 
+// PrintListOrEmpty handles empty or nil slice output. If the slice is nil or empty,
+// it prints an empty JSON array in JSON mode or the provided message in text mode.
+// Returns (true, nil) if output was handled, (false, nil) if the caller should handle
+// non-empty output, or (false, error) if items is not a slice type.
 func PrintListOrEmpty(items any, emptyMsg string) (bool, error) {
 	if items == nil {
 		if IsJSONOutput() {
@@ -49,7 +58,7 @@ func PrintListOrEmpty(items any, emptyMsg string) (bool, error) {
 
 	v := reflect.ValueOf(items)
 	if v.Kind() != reflect.Slice {
-		return false, nil
+		return false, fmt.Errorf("PrintListOrEmpty: expected slice, got %s", v.Kind())
 	}
 
 	if v.Len() == 0 {

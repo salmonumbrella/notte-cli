@@ -51,7 +51,15 @@ var sessionExecuteCmd = &cobra.Command{
 	Use:   "execute",
 	Short: "Execute an action on the page",
 	Args:  cobra.NoArgs,
-	RunE:  runSessionExecute,
+	Example: `  # Direct JSON
+  notte session execute --id <session-id> --action '{"action": "click", "selector": "#btn"}'
+
+  # From file
+  notte session execute --id <session-id> --action @action.json
+
+  # From stdin
+  echo '{"action": "click", "selector": "#btn"}' | notte session execute --id <session-id>`,
+	RunE: runSessionExecute,
 }
 
 var sessionScrapeCmd = &cobra.Command{

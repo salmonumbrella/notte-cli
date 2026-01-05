@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// readJSONInput reads JSON input from a flag value, file, or stdin.
+// Supports: direct JSON, @file.json, @- for stdin, or - for stdin.
 func readJSONInput(cmd *cobra.Command, value string, flagName string) ([]byte, error) {
 	input := strings.TrimSpace(value)
 	if input == "" {
@@ -57,6 +59,9 @@ func readFromStdin(cmd *cobra.Command, flagName string) ([]byte, error) {
 	return data, nil
 }
 
+// stdinHasData checks if stdin has data piped to it.
+// Returns true for non-terminal input (pipes, redirected files).
+// Note: Uses Unix-style ModeCharDevice check; behavior on Windows may differ.
 func stdinHasData(r io.Reader) bool {
 	file, ok := r.(*os.File)
 	if !ok {

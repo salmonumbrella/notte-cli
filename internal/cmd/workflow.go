@@ -88,7 +88,15 @@ var workflowRunMetadataUpdateCmd = &cobra.Command{
 	Use:   "run-metadata-update",
 	Short: "Update workflow run metadata",
 	Args:  cobra.NoArgs,
-	RunE:  runWorkflowRunMetadataUpdate,
+	Example: `  # Direct JSON
+  notte workflow run-metadata-update --id <workflow-id> --run-id <run-id> --data '{"key": "value"}'
+
+  # From file
+  notte workflow run-metadata-update --id <workflow-id> --run-id <run-id> --data @metadata.json
+
+  # From stdin
+  echo '{"key": "value"}' | notte workflow run-metadata-update --id <workflow-id> --run-id <run-id>`,
+	RunE: runWorkflowRunMetadataUpdate,
 }
 
 var workflowScheduleCmd = &cobra.Command{

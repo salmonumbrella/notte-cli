@@ -57,3 +57,15 @@ func TestReadJSONInput_EmptyStdin(t *testing.T) {
 		t.Fatalf("expected error for empty stdin")
 	}
 }
+
+func TestReadJSONInput_FromFileStdin(t *testing.T) {
+	cmd := &cobra.Command{}
+	cmd.SetIn(bytes.NewBufferString(`{"filestdin":true}`))
+	data, err := readJSONInput(cmd, "@-", "data")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if string(data) != `{"filestdin":true}` {
+		t.Fatalf("unexpected data: %s", string(data))
+	}
+}
