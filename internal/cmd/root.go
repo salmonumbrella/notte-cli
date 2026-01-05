@@ -9,6 +9,7 @@ import (
 
 	"github.com/salmonumbrella/notte-cli/internal/api"
 	"github.com/salmonumbrella/notte-cli/internal/auth"
+	"github.com/salmonumbrella/notte-cli/internal/config"
 	"github.com/salmonumbrella/notte-cli/internal/output"
 )
 
@@ -91,7 +92,21 @@ func GetClient() (*api.NotteClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return api.NewClient(apiKey)
+
+	baseURL := os.Getenv(config.EnvAPIURL)
+	if baseURL == "" {
+		cfg, err := config.Load()
+		if err != nil {
+			return nil, err
+		}
+		baseURL = cfg.APIURL
+	}
+
+	if baseURL == "" {
+		baseURL = api.DefaultBaseURL
+	}
+
+	return api.NewClientWithURL(apiKey, baseURL)
 }
 
 // GetContextWithTimeout wraps the provided context with a timeout

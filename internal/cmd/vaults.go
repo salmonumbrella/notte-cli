@@ -57,12 +57,17 @@ func runVaultsList(cmd *cobra.Command, args []string) error {
 
 	formatter := GetFormatter()
 
-	if resp.JSON200 == nil || len(resp.JSON200.Items) == 0 {
-		fmt.Println("No vaults found.")
+	var items []api.Vault
+	if resp.JSON200 != nil {
+		items = resp.JSON200.Items
+	}
+	if printed, err := PrintListOrEmpty(items, "No vaults found."); err != nil {
+		return err
+	} else if printed {
 		return nil
 	}
 
-	return formatter.Print(resp.JSON200.Items)
+	return formatter.Print(items)
 }
 
 func runVaultsCreate(cmd *cobra.Command, args []string) error {

@@ -75,12 +75,17 @@ func runSessionsList(cmd *cobra.Command, args []string) error {
 
 	formatter := GetFormatter()
 
-	if resp.JSON200 == nil || len(resp.JSON200.Items) == 0 {
-		fmt.Println("No active sessions.")
+	var items []api.SessionResponse
+	if resp.JSON200 != nil {
+		items = resp.JSON200.Items
+	}
+	if printed, err := PrintListOrEmpty(items, "No active sessions."); err != nil {
+		return err
+	} else if printed {
 		return nil
 	}
 
-	return formatter.Print(resp.JSON200.Items)
+	return formatter.Print(items)
 }
 
 func runSessionsStart(cmd *cobra.Command, args []string) error {

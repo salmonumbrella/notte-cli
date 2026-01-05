@@ -136,8 +136,7 @@ func init() {
 
 	workflowRunMetadataUpdateCmd.Flags().StringVar(&runID, "run-id", "", "Run ID (required)")
 	_ = workflowRunMetadataUpdateCmd.MarkFlagRequired("run-id")
-	workflowRunMetadataUpdateCmd.Flags().StringVar(&metadataJSON, "data", "", "JSON metadata to update (required)")
-	_ = workflowRunMetadataUpdateCmd.MarkFlagRequired("data")
+	workflowRunMetadataUpdateCmd.Flags().StringVar(&metadataJSON, "data", "", "JSON metadata, @file, or '-' for stdin")
 
 	workflowScheduleCmd.Flags().StringVar(&cronExpression, "cron", "", "Cron expression (required)")
 	_ = workflowScheduleCmd.MarkFlagRequired("cron")
@@ -221,8 +220,7 @@ func runWorkflowDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if !confirmed {
-		fmt.Println("Cancelled.")
-		return nil
+		return PrintResult("Cancelled.", map[string]any{"cancelled": true})
 	}
 
 	client, err := GetClient()
@@ -243,8 +241,10 @@ func runWorkflowDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Workflow %s deleted.\n", workflowID)
-	return nil
+	return PrintResult(fmt.Sprintf("Workflow %s deleted.", workflowID), map[string]any{
+		"id":     workflowID,
+		"status": "deleted",
+	})
 }
 
 func runWorkflowRun(cmd *cobra.Command, args []string) error {
@@ -288,12 +288,17 @@ func runWorkflowRuns(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if resp.JSON200 == nil || len(resp.JSON200.Items) == 0 {
-		fmt.Println("No workflow runs found.")
+	var items []api.GetWorkflowRunResponse
+	if resp.JSON200 != nil {
+		items = resp.JSON200.Items
+	}
+	if printed, err := PrintListOrEmpty(items, "No workflow runs found."); err != nil {
+		return err
+	} else if printed {
 		return nil
 	}
 
-	return GetFormatter().Print(resp.JSON200.Items)
+	return GetFormatter().Print(items)
 }
 
 func runWorkflowFork(cmd *cobra.Command, args []string) error {
@@ -368,9 +373,14 @@ func runWorkflowRunMetadataUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	metadataPayload, err := readJSONInput(cmd, metadataJSON, "data")
+	if err != nil {
+		return err
+	}
+
 	// Parse the JSON metadata
 	var metadata api.WorkflowRunUpdateMetadataJSONRequestBody
-	if err := json.Unmarshal([]byte(metadataJSON), &metadata); err != nil {
+	if err := json.Unmarshal(metadataPayload, &metadata); err != nil {
 		return fmt.Errorf("failed to parse JSON metadata: %w", err)
 	}
 
@@ -413,8 +423,10 @@ func runWorkflowSchedule(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Workflow %s scheduled with cron expression: %s\n", workflowID, cronExpression)
-	return nil
+	return PrintResult(fmt.Sprintf("Workflow %s scheduled with cron expression: %s", workflowID, cronExpression), map[string]any{
+		"id":   workflowID,
+		"cron": cronExpression,
+	})
 }
 
 func runWorkflowUnschedule(cmd *cobra.Command, args []string) error {
@@ -436,6 +448,8 @@ func runWorkflowUnschedule(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Workflow %s schedule removed.\n", workflowID)
-	return nil
+	return PrintResult(fmt.Sprintf("Workflow %s schedule removed.", workflowID), map[string]any{
+		"id":     workflowID,
+		"status": "unscheduled",
+	})
 }

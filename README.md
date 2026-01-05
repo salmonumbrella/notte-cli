@@ -272,7 +272,7 @@ Data goes to stdout, errors and progress to stderr for clean piping.
 # Start session, navigate, scrape, and cleanup
 SESSION_ID=$(notte sessions start --headless -o json | jq -r '.id')
 
-# Navigate to page
+# Navigate to page (stdin also supported: --action @file.json or --action -)
 notte session execute --id $SESSION_ID << 'EOF'
 {"action": "goto", "url": "https://news.ycombinator.com"}
 EOF
@@ -285,19 +285,14 @@ notte session scrape --id $SESSION_ID \
 notte session stop --id $SESSION_ID
 ```
 
-### Running a Workflow with Input
+### Running a Workflow
 
 ```bash
 # List workflows to find ID
 notte workflows list
 
-# Run workflow with specific input
-notte workflow run --id wfl_abc123 << 'EOF'
-{
-  "product_url": "https://example.com/product/12345",
-  "notify_email": "alerts@example.com"
-}
-EOF
+# Run workflow
+notte workflow run --id wfl_abc123
 ```
 
 ### Managing Credentials Securely

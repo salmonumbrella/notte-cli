@@ -132,8 +132,7 @@ func init() {
 
 	sessionObserveCmd.Flags().StringVar(&sessionObserveURL, "url", "", "Navigate to URL before observing")
 
-	sessionExecuteCmd.Flags().StringVar(&sessionExecuteAction, "action", "", "Action JSON (required)")
-	_ = sessionExecuteCmd.MarkFlagRequired("action")
+	sessionExecuteCmd.Flags().StringVar(&sessionExecuteAction, "action", "", "Action JSON, @file, or '-' for stdin")
 
 	sessionScrapeCmd.Flags().StringVar(&sessionScrapeInstructions, "instructions", "", "Extraction instructions")
 	sessionScrapeCmd.Flags().BoolVar(&sessionScrapeOnlyMain, "only-main-content", false, "Only scrape main content")
@@ -170,8 +169,7 @@ func runSessionStop(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if !confirmed {
-		fmt.Println("Cancelled.")
-		return nil
+		return PrintResult("Cancelled.", map[string]any{"cancelled": true})
 	}
 
 	client, err := GetClient()
@@ -192,8 +190,10 @@ func runSessionStop(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Session %s stopped.\n", sessionID)
-	return nil
+	return PrintResult(fmt.Sprintf("Session %s stopped.", sessionID), map[string]any{
+		"id":     sessionID,
+		"status": "stopped",
+	})
 }
 
 func runSessionObserve(cmd *cobra.Command, args []string) error {
@@ -232,9 +232,14 @@ func runSessionExecute(cmd *cobra.Command, args []string) error {
 	ctx, cancel := GetContextWithTimeout(cmd.Context())
 	defer cancel()
 
+	actionPayload, err := readJSONInput(cmd, sessionExecuteAction, "action")
+	if err != nil {
+		return err
+	}
+
 	// Validate action JSON
 	var actionData json.RawMessage
-	if err := json.Unmarshal([]byte(sessionExecuteAction), &actionData); err != nil {
+	if err := json.Unmarshal(actionPayload, &actionData); err != nil {
 		return fmt.Errorf("invalid action JSON: %w", err)
 	}
 

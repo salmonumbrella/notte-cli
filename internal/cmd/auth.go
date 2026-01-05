@@ -46,7 +46,7 @@ func init() {
 }
 
 func runAuthLogin(cmd *cobra.Command, args []string) error {
-	fmt.Println("Opening browser for authentication...")
+	PrintInfo("Opening browser for authentication...")
 
 	server := auth.NewSetupServer()
 
@@ -62,8 +62,10 @@ func runAuthLogin(cmd *cobra.Command, args []string) error {
 		return result.Error
 	}
 
-	fmt.Println("API key stored successfully in keychain.")
-	return nil
+	return PrintResult("API key stored successfully in keychain.", map[string]any{
+		"authenticated": true,
+		"source":        "keychain",
+	})
 }
 
 func runAuthLogout(cmd *cobra.Command, args []string) error {
@@ -71,8 +73,9 @@ func runAuthLogout(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to remove API key: %w", err)
 	}
 
-	fmt.Println("API key removed from keychain.")
-	return nil
+	return PrintResult("API key removed from keychain.", map[string]any{
+		"authenticated": false,
+	})
 }
 
 func runAuthStatus(cmd *cobra.Command, args []string) error {

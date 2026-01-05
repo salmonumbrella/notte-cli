@@ -101,8 +101,7 @@ func runPersonaDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if !confirmed {
-		fmt.Println("Cancelled.")
-		return nil
+		return PrintResult("Cancelled.", map[string]any{"cancelled": true})
 	}
 
 	client, err := GetClient()
@@ -123,8 +122,10 @@ func runPersonaDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Persona %s deleted.\n", personaID)
-	return nil
+	return PrintResult(fmt.Sprintf("Persona %s deleted.", personaID), map[string]any{
+		"id":     personaID,
+		"status": "deleted",
+	})
 }
 
 func runPersonaEmails(cmd *cobra.Command, args []string) error {

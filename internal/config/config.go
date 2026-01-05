@@ -11,6 +11,7 @@ const (
 	DefaultAPIURL  = "https://api.notte.cc"
 	ConfigDirName  = "notte"
 	ConfigFileName = "config.json"
+	EnvAPIURL      = "NOTTE_API_URL"
 )
 
 // Config holds CLI configuration

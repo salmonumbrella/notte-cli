@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"os"
 	"testing"
 )
 
@@ -14,6 +15,9 @@ func TestKeyringServiceName(t *testing.T) {
 func TestKeyring_SetGetDelete(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping keyring integration test")
+	}
+	if os.Getenv("NOTTE_KEYRING_TEST") == "" {
+		t.Skip("set NOTTE_KEYRING_TEST=1 to run keyring integration test")
 	}
 
 	testKey := "test_api_key_12345"

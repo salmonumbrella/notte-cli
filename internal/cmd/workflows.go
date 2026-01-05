@@ -71,12 +71,17 @@ func runWorkflowsList(cmd *cobra.Command, args []string) error {
 
 	formatter := GetFormatter()
 
-	if resp.JSON200 == nil || len(resp.JSON200.Items) == 0 {
-		fmt.Println("No workflows found.")
+	var items []api.GetWorkflowResponse
+	if resp.JSON200 != nil {
+		items = resp.JSON200.Items
+	}
+	if printed, err := PrintListOrEmpty(items, "No workflows found."); err != nil {
+		return err
+	} else if printed {
 		return nil
 	}
 
-	return formatter.Print(resp.JSON200.Items)
+	return formatter.Print(items)
 }
 
 func runWorkflowsCreate(cmd *cobra.Command, args []string) error {

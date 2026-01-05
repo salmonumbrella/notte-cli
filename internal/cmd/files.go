@@ -94,12 +94,17 @@ func runFilesList(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if resp.JSON200 == nil || len(resp.JSON200.Files) == 0 {
-			fmt.Println("No downloaded files in session.")
+		var files []string
+		if resp.JSON200 != nil {
+			files = resp.JSON200.Files
+		}
+		if printed, err := PrintListOrEmpty(files, "No downloaded files in session."); err != nil {
+			return err
+		} else if printed {
 			return nil
 		}
 
-		return formatter.Print(resp.JSON200.Files)
+		return formatter.Print(files)
 	}
 
 	// Default: list uploads
@@ -116,12 +121,17 @@ func runFilesList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if resp.JSON200 == nil || len(resp.JSON200.Files) == 0 {
-		fmt.Println("No uploaded files.")
+	var files []string
+	if resp.JSON200 != nil {
+		files = resp.JSON200.Files
+	}
+	if printed, err := PrintListOrEmpty(files, "No uploaded files."); err != nil {
+		return err
+	} else if printed {
 		return nil
 	}
 
-	return formatter.Print(resp.JSON200.Files)
+	return formatter.Print(files)
 }
 
 func runFilesUpload(cmd *cobra.Command, args []string) error {
@@ -188,8 +198,13 @@ func runFilesUpload(cmd *cobra.Command, args []string) error {
 
 	formatter := GetFormatter()
 	if resp.JSON200 != nil && resp.JSON200.Success {
-		fmt.Printf("File uploaded successfully: %s\n", filename)
-		return nil
+		if IsJSONOutput() {
+			return formatter.Print(resp.JSON200)
+		}
+		return PrintResult(fmt.Sprintf("File uploaded successfully: %s", filename), map[string]any{
+			"filename": filename,
+			"success":  true,
+		})
 	}
 
 	return formatter.Print(resp.JSON200)
@@ -237,6 +252,9 @@ func runFilesDownload(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
-	fmt.Printf("File downloaded successfully: %s\n", outputPath)
-	return nil
+	return PrintResult(fmt.Sprintf("File downloaded successfully: %s", outputPath), map[string]any{
+		"filename": filename,
+		"path":     outputPath,
+		"success":  true,
+	})
 }

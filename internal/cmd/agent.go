@@ -80,8 +80,7 @@ func runAgentStop(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if !confirmed {
-		fmt.Println("Cancelled.")
-		return nil
+		return PrintResult("Cancelled.", map[string]any{"cancelled": true})
 	}
 
 	client, err := GetClient()
@@ -104,8 +103,10 @@ func runAgentStop(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Agent %s stopped.\n", agentID)
-	return nil
+	return PrintResult(fmt.Sprintf("Agent %s stopped.", agentID), map[string]any{
+		"id":     agentID,
+		"status": "stopped",
+	})
 }
 
 func runAgentWorkflowCode(cmd *cobra.Command, args []string) error {

@@ -68,12 +68,17 @@ func runAgentsList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if resp.JSON200 == nil || len(resp.JSON200.Items) == 0 {
-		fmt.Println("No running agents.")
+	var items []api.AgentResponse
+	if resp.JSON200 != nil {
+		items = resp.JSON200.Items
+	}
+	if printed, err := PrintListOrEmpty(items, "No running agents."); err != nil {
+		return err
+	} else if printed {
 		return nil
 	}
 
-	return GetFormatter().Print(resp.JSON200.Items)
+	return GetFormatter().Print(items)
 }
 
 func runAgentsStart(cmd *cobra.Command, args []string) error {

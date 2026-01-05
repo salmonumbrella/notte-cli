@@ -186,8 +186,7 @@ func runVaultDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if !confirmed {
-		fmt.Println("Cancelled.")
-		return nil
+		return PrintResult("Cancelled.", map[string]any{"cancelled": true})
 	}
 
 	client, err := GetClient()
@@ -208,8 +207,10 @@ func runVaultDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Vault %s deleted.\n", vaultID)
-	return nil
+	return PrintResult(fmt.Sprintf("Vault %s deleted.", vaultID), map[string]any{
+		"id":     vaultID,
+		"status": "deleted",
+	})
 }
 
 func runVaultCredentialsList(cmd *cobra.Command, args []string) error {
@@ -233,12 +234,17 @@ func runVaultCredentialsList(cmd *cobra.Command, args []string) error {
 
 	formatter := GetFormatter()
 
-	if resp.JSON200 == nil || len(resp.JSON200.Credentials) == 0 {
-		fmt.Println("No credentials found.")
+	var creds []api.Credential
+	if resp.JSON200 != nil {
+		creds = resp.JSON200.Credentials
+	}
+	if printed, err := PrintListOrEmpty(creds, "No credentials found."); err != nil {
+		return err
+	} else if printed {
 		return nil
 	}
 
-	return formatter.Print(resp.JSON200.Credentials)
+	return formatter.Print(creds)
 }
 
 func runVaultCredentialsAdd(cmd *cobra.Command, args []string) error {
@@ -333,8 +339,7 @@ func runVaultCredentialsDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if !confirmed {
-		fmt.Println("Cancelled.")
-		return nil
+		return PrintResult("Cancelled.", map[string]any{"cancelled": true})
 	}
 
 	client, err := GetClient()
@@ -358,8 +363,10 @@ func runVaultCredentialsDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Credentials for URL %s deleted from vault %s.\n", vaultCredentialsDeleteURL, vaultID)
-	return nil
+	return PrintResult(fmt.Sprintf("Credentials for URL %s deleted from vault %s.", vaultCredentialsDeleteURL, vaultID), map[string]any{
+		"id":  vaultID,
+		"url": vaultCredentialsDeleteURL,
+	})
 }
 
 func runVaultCard(cmd *cobra.Command, args []string) error {
@@ -435,8 +442,7 @@ func runVaultCardDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if !confirmed {
-		fmt.Println("Cancelled.")
-		return nil
+		return PrintResult("Cancelled.", map[string]any{"cancelled": true})
 	}
 
 	client, err := GetClient()
@@ -457,6 +463,8 @@ func runVaultCardDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("Credit card deleted from vault %s.\n", vaultID)
-	return nil
+	return PrintResult(fmt.Sprintf("Credit card deleted from vault %s.", vaultID), map[string]any{
+		"id":     vaultID,
+		"status": "deleted",
+	})
 }
