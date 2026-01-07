@@ -1,0 +1,180 @@
+package cmd
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/spf13/cobra"
+
+	"github.com/salmonumbrella/notte-cli/internal/testutil"
+)
+
+func TestRunFilesListUploads(t *testing.T) {
+	env := testutil.SetupTestEnv(t)
+	env.SetEnv("NOTTE_API_KEY", "test-key")
+
+	server := testutil.NewMockServer()
+	defer server.Close()
+	env.SetEnv("NOTTE_API_URL", server.URL())
+
+	server.AddResponse("/storage/uploads", 200, `{"files":["a.txt"]}`)
+
+	origDownloadsFlag := filesListDownloadsFlag
+	origSession := filesDownloadSession
+	t.Cleanup(func() {
+		filesListDownloadsFlag = origDownloadsFlag
+		filesDownloadSession = origSession
+	})
+	filesListDownloadsFlag = false
+	filesDownloadSession = ""
+
+	origFormat := outputFormat
+	outputFormat = "json"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runFilesList(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if stdout == "" {
+		t.Error("expected output, got empty string")
+	}
+}
+
+func TestRunFilesListDownloads(t *testing.T) {
+	env := testutil.SetupTestEnv(t)
+	env.SetEnv("NOTTE_API_KEY", "test-key")
+
+	server := testutil.NewMockServer()
+	defer server.Close()
+	env.SetEnv("NOTTE_API_URL", server.URL())
+
+	server.AddResponse("/storage/sess_123/downloads", 200, `{"files":["b.txt"]}`)
+
+	origDownloadsFlag := filesListDownloadsFlag
+	origSession := filesDownloadSession
+	t.Cleanup(func() {
+		filesListDownloadsFlag = origDownloadsFlag
+		filesDownloadSession = origSession
+	})
+	filesListDownloadsFlag = true
+	filesDownloadSession = "sess_123"
+
+	origFormat := outputFormat
+	outputFormat = "json"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runFilesList(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if stdout == "" {
+		t.Error("expected output, got empty string")
+	}
+}
+
+func TestRunFilesUpload(t *testing.T) {
+	env := testutil.SetupTestEnv(t)
+	env.SetEnv("NOTTE_API_KEY", "test-key")
+
+	server := testutil.NewMockServer()
+	defer server.Close()
+	env.SetEnv("NOTTE_API_URL", server.URL())
+
+	tmpFile, err := os.CreateTemp("", "upload-*.txt")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	if _, err := tmpFile.WriteString("hello"); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		t.Fatalf("failed to close temp file: %v", err)
+	}
+	t.Cleanup(func() { _ = os.Remove(tmpFile.Name()) })
+
+	server.AddResponse("/storage/uploads/"+filepath.Base(tmpFile.Name()), 200, `{"success":true}`)
+
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runFilesUpload(cmd, []string{tmpFile.Name()})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if !strings.Contains(stdout, "File uploaded successfully") {
+		t.Fatalf("expected upload message, got %q", stdout)
+	}
+}
+
+func TestRunFilesDownload(t *testing.T) {
+	env := testutil.SetupTestEnv(t)
+	env.SetEnv("NOTTE_API_KEY", "test-key")
+
+	server := testutil.NewMockServer()
+	defer server.Close()
+	env.SetEnv("NOTTE_API_URL", server.URL())
+
+	origSession := filesDownloadSession
+	origOutput := filesDownloadOutput
+	t.Cleanup(func() {
+		filesDownloadSession = origSession
+		filesDownloadOutput = origOutput
+	})
+	filesDownloadSession = "sess_123"
+
+	outDir := t.TempDir()
+	outputPath := filepath.Join(outDir, "download.txt")
+	filesDownloadOutput = outputPath
+
+	server.AddResponseWithHeaders("/storage/sess_123/downloads/file.txt", 200, "filedata", map[string]string{
+		"Content-Type": "application/octet-stream",
+	})
+
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runFilesDownload(cmd, []string{"file.txt"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	got, err := os.ReadFile(outputPath)
+	if err != nil {
+		t.Fatalf("failed to read downloaded file: %v", err)
+	}
+	if string(got) != "filedata" {
+		t.Fatalf("unexpected file content: %q", string(got))
+	}
+	if !strings.Contains(stdout, "File downloaded successfully") {
+		t.Fatalf("expected download message, got %q", stdout)
+	}
+}
