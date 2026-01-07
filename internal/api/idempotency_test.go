@@ -2,6 +2,7 @@
 package api
 
 import (
+	"net/http"
 	"testing"
 )
 
@@ -48,5 +49,49 @@ func TestIsMutatingMethod(t *testing.T) {
 				t.Errorf("IsMutatingMethod(%q) = %v, want %v", tt.method, got, tt.mutating)
 			}
 		})
+	}
+}
+
+func TestAddIdempotencyKey_MutatingMethods(t *testing.T) {
+	methods := []string{http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete}
+
+	for _, method := range methods {
+		t.Run(method, func(t *testing.T) {
+			req, _ := http.NewRequest(method, "http://example.com", nil)
+			AddIdempotencyKey(req)
+
+			key := req.Header.Get(IdempotencyKeyHeader)
+			if key == "" {
+				t.Errorf("%s request should have Idempotency-Key header", method)
+			}
+		})
+	}
+}
+
+func TestAddIdempotencyKey_NonMutatingMethods(t *testing.T) {
+	methods := []string{http.MethodGet, http.MethodHead, http.MethodOptions}
+
+	for _, method := range methods {
+		t.Run(method, func(t *testing.T) {
+			req, _ := http.NewRequest(method, "http://example.com", nil)
+			AddIdempotencyKey(req)
+
+			key := req.Header.Get(IdempotencyKeyHeader)
+			if key != "" {
+				t.Errorf("%s request should NOT have Idempotency-Key header, got %q", method, key)
+			}
+		})
+	}
+}
+
+func TestAddIdempotencyKey_PreservesExisting(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodPost, "http://example.com", nil)
+	req.Header.Set(IdempotencyKeyHeader, "existing-key")
+
+	AddIdempotencyKey(req)
+
+	key := req.Header.Get(IdempotencyKeyHeader)
+	if key != "existing-key" {
+		t.Errorf("should preserve existing key, got %q", key)
 	}
 }
