@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"os"
 	"strings"
 	"testing"
 
@@ -124,5 +125,45 @@ func TestRunAgentReplay(t *testing.T) {
 
 	if stdout == "" {
 		t.Error("expected output, got empty string")
+	}
+}
+
+func TestRunAgentStopCancelled(t *testing.T) {
+	_ = setupAgentTest(t)
+
+	origSkip := skipConfirmation
+	t.Cleanup(func() { skipConfirmation = origSkip })
+	skipConfirmation = false
+
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	_, _ = w.WriteString("n\n")
+	_ = w.Close()
+
+	origStdin := os.Stdin
+	os.Stdin = r
+	t.Cleanup(func() {
+		os.Stdin = origStdin
+		_ = r.Close()
+	})
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runAgentStop(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if !strings.Contains(stdout, "Cancelled.") {
+		t.Errorf("expected cancel message, got %q", stdout)
 	}
 }

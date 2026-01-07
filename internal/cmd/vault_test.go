@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"os"
 	"strings"
 	"testing"
 
@@ -78,6 +79,46 @@ func TestRunVaultDelete(t *testing.T) {
 
 	if !strings.Contains(stdout, "deleted") {
 		t.Errorf("expected delete message, got %q", stdout)
+	}
+}
+
+func TestRunVaultDeleteCancelled(t *testing.T) {
+	_ = setupVaultTest(t)
+
+	origSkip := skipConfirmation
+	t.Cleanup(func() { skipConfirmation = origSkip })
+	skipConfirmation = false
+
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	_, _ = w.WriteString("n\n")
+	_ = w.Close()
+
+	origStdin := os.Stdin
+	os.Stdin = r
+	t.Cleanup(func() {
+		os.Stdin = origStdin
+		_ = r.Close()
+	})
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runVaultDelete(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if !strings.Contains(stdout, "Cancelled.") {
+		t.Errorf("expected cancel message, got %q", stdout)
 	}
 }
 
@@ -169,6 +210,90 @@ func TestRunVaultCredentialsAdd(t *testing.T) {
 	}
 }
 
+func TestRunVaultCredentialsAdd_InvalidURL(t *testing.T) {
+	_ = setupVaultTest(t)
+
+	origURL := vaultCredentialsAddURL
+	origEmail := vaultCredentialsAddEmail
+	origUser := vaultCredentialsAddUsername
+	origPass := vaultCredentialsAddPassword
+	origMFA := vaultCredentialsAddMFA
+	t.Cleanup(func() {
+		vaultCredentialsAddURL = origURL
+		vaultCredentialsAddEmail = origEmail
+		vaultCredentialsAddUsername = origUser
+		vaultCredentialsAddPassword = origPass
+		vaultCredentialsAddMFA = origMFA
+	})
+
+	vaultCredentialsAddURL = "://bad"
+	vaultCredentialsAddPassword = "pass"
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	err := runVaultCredentialsAdd(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for invalid URL")
+	}
+	if !strings.Contains(err.Error(), "invalid URL format") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunVaultCredentialsAdd_EmptyPassword(t *testing.T) {
+	_ = setupVaultTest(t)
+
+	origURL := vaultCredentialsAddURL
+	origPass := vaultCredentialsAddPassword
+	t.Cleanup(func() {
+		vaultCredentialsAddURL = origURL
+		vaultCredentialsAddPassword = origPass
+	})
+
+	vaultCredentialsAddURL = "https://example.com"
+	vaultCredentialsAddPassword = "   "
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	err := runVaultCredentialsAdd(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for empty password")
+	}
+	if !strings.Contains(err.Error(), "password cannot be empty") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunVaultCredentialsAdd_InvalidEmail(t *testing.T) {
+	_ = setupVaultTest(t)
+
+	origURL := vaultCredentialsAddURL
+	origEmail := vaultCredentialsAddEmail
+	origPass := vaultCredentialsAddPassword
+	t.Cleanup(func() {
+		vaultCredentialsAddURL = origURL
+		vaultCredentialsAddEmail = origEmail
+		vaultCredentialsAddPassword = origPass
+	})
+
+	vaultCredentialsAddURL = "https://example.com"
+	vaultCredentialsAddEmail = "not-an-email"
+	vaultCredentialsAddPassword = "pass"
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	err := runVaultCredentialsAdd(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for invalid email")
+	}
+	if !strings.Contains(err.Error(), "invalid email format") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestRunVaultCredentialsGet(t *testing.T) {
 	server := setupVaultTest(t)
 	server.AddResponse("/vaults/"+vaultIDTest+"/credentials", 200, `{"credentials":{"password":"pass","email":"test@example.com"}}`)
@@ -223,6 +348,50 @@ func TestRunVaultCredentialsDelete(t *testing.T) {
 
 	if !strings.Contains(stdout, "deleted") {
 		t.Errorf("expected delete message, got %q", stdout)
+	}
+}
+
+func TestRunVaultCredentialsDeleteCancelled(t *testing.T) {
+	_ = setupVaultTest(t)
+
+	origURL := vaultCredentialsDeleteURL
+	vaultCredentialsDeleteURL = "https://example.com"
+	t.Cleanup(func() { vaultCredentialsDeleteURL = origURL })
+
+	origSkip := skipConfirmation
+	t.Cleanup(func() { skipConfirmation = origSkip })
+	skipConfirmation = false
+
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	_, _ = w.WriteString("n\n")
+	_ = w.Close()
+
+	origStdin := os.Stdin
+	os.Stdin = r
+	t.Cleanup(func() {
+		os.Stdin = origStdin
+		_ = r.Close()
+	})
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runVaultCredentialsDelete(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if !strings.Contains(stdout, "Cancelled.") {
+		t.Errorf("expected cancel message, got %q", stdout)
 	}
 }
 
@@ -288,6 +457,37 @@ func TestRunVaultCardSet(t *testing.T) {
 	}
 }
 
+func TestRunVaultCardSet_EmptyNumber(t *testing.T) {
+	_ = setupVaultTest(t)
+
+	origNumber := vaultCardSetNumber
+	origExpiry := vaultCardSetExpiry
+	origCVV := vaultCardSetCVV
+	origName := vaultCardSetName
+	t.Cleanup(func() {
+		vaultCardSetNumber = origNumber
+		vaultCardSetExpiry = origExpiry
+		vaultCardSetCVV = origCVV
+		vaultCardSetName = origName
+	})
+
+	vaultCardSetNumber = ""
+	vaultCardSetExpiry = "12/25"
+	vaultCardSetCVV = "123"
+	vaultCardSetName = "Tester"
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	err := runVaultCardSet(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for empty card number")
+	}
+	if !strings.Contains(err.Error(), "card number cannot be empty") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestRunVaultCardDelete(t *testing.T) {
 	server := setupVaultTest(t)
 	server.AddResponse("/vaults/"+vaultIDTest+"/card", 200, `{"status":"deleted","message":"deleted"}`)
@@ -311,5 +511,45 @@ func TestRunVaultCardDelete(t *testing.T) {
 
 	if !strings.Contains(stdout, "deleted") {
 		t.Errorf("expected delete message, got %q", stdout)
+	}
+}
+
+func TestRunVaultCardDeleteCancelled(t *testing.T) {
+	_ = setupVaultTest(t)
+
+	origSkip := skipConfirmation
+	t.Cleanup(func() { skipConfirmation = origSkip })
+	skipConfirmation = false
+
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	_, _ = w.WriteString("n\n")
+	_ = w.Close()
+
+	origStdin := os.Stdin
+	os.Stdin = r
+	t.Cleanup(func() {
+		os.Stdin = origStdin
+		_ = r.Close()
+	})
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runVaultCardDelete(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if !strings.Contains(stdout, "Cancelled.") {
+		t.Errorf("expected cancel message, got %q", stdout)
 	}
 }

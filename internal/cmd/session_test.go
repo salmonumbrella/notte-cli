@@ -83,6 +83,46 @@ func TestRunSessionStop(t *testing.T) {
 	}
 }
 
+func TestRunSessionStopCancelled(t *testing.T) {
+	_ = setupSessionTest(t)
+
+	origSkip := skipConfirmation
+	t.Cleanup(func() { skipConfirmation = origSkip })
+	skipConfirmation = false
+
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	_, _ = w.WriteString("n\n")
+	_ = w.Close()
+
+	origStdin := os.Stdin
+	os.Stdin = r
+	t.Cleanup(func() {
+		os.Stdin = origStdin
+		_ = r.Close()
+	})
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runSessionStop(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if !strings.Contains(stdout, "Cancelled.") {
+		t.Errorf("expected cancel message, got %q", stdout)
+	}
+}
+
 func TestRunSessionObserve(t *testing.T) {
 	server := setupSessionTest(t)
 	observeResp := fmt.Sprintf(`{"metadata":{"tabs":[{"tab_id":1,"title":"Tab","url":"https://example.com"}],"title":"Tab","url":"https://example.com"},"screenshot":{"raw":"aGVsbG8="},"session":%s,"space":{"category":"page","description":"desc","interaction_actions":[]}}`, sessionJSON())
@@ -90,6 +130,34 @@ func TestRunSessionObserve(t *testing.T) {
 
 	origURL := sessionObserveURL
 	sessionObserveURL = "https://example.com"
+	t.Cleanup(func() { sessionObserveURL = origURL })
+
+	origFormat := outputFormat
+	outputFormat = "json"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runSessionObserve(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if stdout == "" {
+		t.Error("expected output, got empty string")
+	}
+}
+
+func TestRunSessionObserve_NoURL(t *testing.T) {
+	server := setupSessionTest(t)
+	observeResp := fmt.Sprintf(`{"metadata":{"tabs":[{"tab_id":1,"title":"Tab","url":"https://example.com"}],"title":"Tab","url":"https://example.com"},"screenshot":{"raw":"aGVsbG8="},"session":%s,"space":{"category":"page","description":"desc","interaction_actions":[]}}`, sessionJSON())
+	server.AddResponse("/sessions/"+sessionIDTest+"/page/observe", 200, observeResp)
+
+	origURL := sessionObserveURL
+	sessionObserveURL = ""
 	t.Cleanup(func() { sessionObserveURL = origURL })
 
 	origFormat := outputFormat
@@ -139,6 +207,25 @@ func TestRunSessionExecute(t *testing.T) {
 	}
 }
 
+func TestRunSessionExecute_InvalidJSON(t *testing.T) {
+	_ = setupSessionTest(t)
+
+	origAction := sessionExecuteAction
+	sessionExecuteAction = "{"
+	t.Cleanup(func() { sessionExecuteAction = origAction })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	err := runSessionExecute(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for invalid JSON")
+	}
+	if !strings.Contains(err.Error(), "invalid action JSON") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestRunSessionScrape(t *testing.T) {
 	server := setupSessionTest(t)
 	scrapeResp := fmt.Sprintf(`{"markdown":"hi","structured":{},"session":%s}`, sessionJSON())
@@ -148,6 +235,39 @@ func TestRunSessionScrape(t *testing.T) {
 	origOnlyMain := sessionScrapeOnlyMain
 	sessionScrapeInstructions = "extract"
 	sessionScrapeOnlyMain = true
+	t.Cleanup(func() {
+		sessionScrapeInstructions = origInstructions
+		sessionScrapeOnlyMain = origOnlyMain
+	})
+
+	origFormat := outputFormat
+	outputFormat = "json"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runSessionScrape(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if stdout == "" {
+		t.Error("expected output, got empty string")
+	}
+}
+
+func TestRunSessionScrape_Defaults(t *testing.T) {
+	server := setupSessionTest(t)
+	scrapeResp := fmt.Sprintf(`{"markdown":"hi","structured":{},"session":%s}`, sessionJSON())
+	server.AddResponse("/sessions/"+sessionIDTest+"/page/scrape", 200, scrapeResp)
+
+	origInstructions := sessionScrapeInstructions
+	origOnlyMain := sessionScrapeOnlyMain
+	sessionScrapeInstructions = ""
+	sessionScrapeOnlyMain = false
 	t.Cleanup(func() {
 		sessionScrapeInstructions = origInstructions
 		sessionScrapeOnlyMain = origOnlyMain
@@ -231,6 +351,56 @@ func TestRunSessionCookiesSet(t *testing.T) {
 
 	if stdout == "" {
 		t.Error("expected output, got empty string")
+	}
+}
+
+func TestRunSessionCookiesSet_MissingFile(t *testing.T) {
+	_ = setupSessionTest(t)
+
+	origFile := sessionCookiesSetFile
+	sessionCookiesSetFile = "missing-cookies.json"
+	t.Cleanup(func() { sessionCookiesSetFile = origFile })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	err := runSessionCookiesSet(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for missing file")
+	}
+	if !strings.Contains(err.Error(), "failed to read cookies file") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestRunSessionCookiesSet_InvalidJSON(t *testing.T) {
+	_ = setupSessionTest(t)
+
+	tmpFile, err := os.CreateTemp("", "cookies-invalid-*.json")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	if _, err := tmpFile.WriteString("{"); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		t.Fatalf("failed to close temp file: %v", err)
+	}
+	t.Cleanup(func() { _ = os.Remove(tmpFile.Name()) })
+
+	origFile := sessionCookiesSetFile
+	sessionCookiesSetFile = tmpFile.Name()
+	t.Cleanup(func() { sessionCookiesSetFile = origFile })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	err = runSessionCookiesSet(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for invalid JSON")
+	}
+	if !strings.Contains(err.Error(), "failed to parse cookies JSON") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

@@ -115,6 +115,25 @@ func TestRunWorkflowUpdate(t *testing.T) {
 	}
 }
 
+func TestRunWorkflowUpdate_MissingFile(t *testing.T) {
+	_ = setupWorkflowTest(t)
+
+	origFile := workflowUpdateFile
+	workflowUpdateFile = "missing-workflow.json"
+	t.Cleanup(func() { workflowUpdateFile = origFile })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	err := runWorkflowUpdate(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for missing file")
+	}
+	if !strings.Contains(err.Error(), "failed to open file") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestRunWorkflowDelete(t *testing.T) {
 	server := setupWorkflowTest(t)
 	server.AddResponse("/workflows/"+workflowIDTest, 200, `{"message":"deleted","status":"deleted"}`)
@@ -138,6 +157,46 @@ func TestRunWorkflowDelete(t *testing.T) {
 
 	if !strings.Contains(stdout, "deleted") {
 		t.Errorf("expected delete message, got %q", stdout)
+	}
+}
+
+func TestRunWorkflowDeleteCancelled(t *testing.T) {
+	_ = setupWorkflowTest(t)
+
+	origSkip := skipConfirmation
+	t.Cleanup(func() { skipConfirmation = origSkip })
+	skipConfirmation = false
+
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("failed to create pipe: %v", err)
+	}
+	_, _ = w.WriteString("n\n")
+	_ = w.Close()
+
+	origStdin := os.Stdin
+	os.Stdin = r
+	t.Cleanup(func() {
+		os.Stdin = origStdin
+		_ = r.Close()
+	})
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runWorkflowDelete(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if !strings.Contains(stdout, "Cancelled.") {
+		t.Errorf("expected cancel message, got %q", stdout)
 	}
 }
 
@@ -303,6 +362,25 @@ func TestRunWorkflowRunMetadataUpdate(t *testing.T) {
 
 	if stdout == "" {
 		t.Error("expected output, got empty string")
+	}
+}
+
+func TestRunWorkflowRunMetadataUpdate_InvalidJSON(t *testing.T) {
+	_ = setupWorkflowTest(t)
+
+	origMetadata := metadataJSON
+	metadataJSON = "{"
+	t.Cleanup(func() { metadataJSON = origMetadata })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	err := runWorkflowRunMetadataUpdate(cmd, nil)
+	if err == nil {
+		t.Fatal("expected error for invalid metadata JSON")
+	}
+	if !strings.Contains(err.Error(), "failed to parse JSON metadata") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

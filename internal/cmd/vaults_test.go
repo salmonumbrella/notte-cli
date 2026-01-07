@@ -100,3 +100,36 @@ func TestRunVaultsCreate_Success(t *testing.T) {
 		t.Error("expected output, got empty string")
 	}
 }
+
+func TestRunVaultsCreate_NoName(t *testing.T) {
+	env := testutil.SetupTestEnv(t)
+	env.SetEnv("NOTTE_API_KEY", "test-key")
+
+	server := testutil.NewMockServer()
+	defer server.Close()
+	env.SetEnv("NOTTE_API_URL", server.URL())
+
+	server.AddResponse("/vaults/create", 200, `{"vault_id":"vault_2","name":"","created_at":"2020-01-01T00:00:00Z"}`)
+
+	origName := vaultsCreateName
+	t.Cleanup(func() { vaultsCreateName = origName })
+	vaultsCreateName = ""
+
+	origFormat := outputFormat
+	outputFormat = "json"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	stdout, _ := testutil.CaptureOutput(func() {
+		err := runVaultsCreate(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	if stdout == "" {
+		t.Error("expected output, got empty string")
+	}
+}
