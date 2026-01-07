@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -109,5 +110,33 @@ func TestResilientTransport_RecordsFailureOn5xx(t *testing.T) {
 	// Circuit should be open now
 	if cb.Allow() {
 		t.Error("circuit breaker should be open after failures")
+	}
+}
+
+func TestNotteClient_Client(t *testing.T) {
+	client, err := NewClient("test-key")
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	inner := client.Client()
+	if inner == nil {
+		t.Error("Client() should return non-nil ClientWithResponses")
+	}
+}
+
+func TestDefaultContext(t *testing.T) {
+	ctx := DefaultContext()
+	if ctx == nil {
+		t.Error("DefaultContext() should return non-nil context")
+	}
+	if ctx.Err() != nil {
+		t.Errorf("DefaultContext() should not have error: %v", ctx.Err())
+	}
+	if _, ok := ctx.Deadline(); ok {
+		t.Error("DefaultContext() should not have deadline")
+	}
+	if ctx != context.Background() {
+		t.Error("DefaultContext() should return context.Background()")
 	}
 }
