@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"bytes"
+	"io"
+	"os"
 	"strings"
 	"testing"
 
@@ -117,4 +120,76 @@ func TestPrintListOrEmpty_EdgeCases(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPrintInfo(t *testing.T) {
+	tests := []struct {
+		name         string
+		outputFormat string
+		message      string
+		wantStdout   bool
+	}{
+		{"text mode prints to stdout", "text", "test message", true},
+		{"json mode prints to stderr", "json", "test message", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			orig := outputFormat
+			outputFormat = tt.outputFormat
+			t.Cleanup(func() { outputFormat = orig })
+
+			stdout, stderr := testutil.CaptureOutput(func() {
+				PrintInfo(tt.message)
+			})
+
+			if tt.wantStdout {
+				if !strings.Contains(stdout, tt.message) {
+					t.Errorf("expected message in stdout, got stdout=%q stderr=%q", stdout, stderr)
+				}
+			} else {
+				if !strings.Contains(stderr, tt.message) {
+					t.Errorf("expected message in stderr, got stdout=%q stderr=%q", stdout, stderr)
+				}
+			}
+		})
+	}
+}
+
+func TestPrintResult(t *testing.T) {
+	t.Run("text mode prints message", func(t *testing.T) {
+		orig := outputFormat
+		outputFormat = "text"
+		t.Cleanup(func() { outputFormat = orig })
+
+		oldStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+
+		err := PrintResult("success message", nil)
+
+		_ = w.Close()
+		os.Stdout = oldStdout
+
+		var buf bytes.Buffer
+		_, _ = io.Copy(&buf, r)
+
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if !strings.Contains(buf.String(), "success message") {
+			t.Errorf("expected message in output, got %q", buf.String())
+		}
+	})
+
+	t.Run("empty message returns nil", func(t *testing.T) {
+		orig := outputFormat
+		outputFormat = "text"
+		t.Cleanup(func() { outputFormat = orig })
+
+		err := PrintResult("", nil)
+		if err != nil {
+			t.Errorf("expected nil for empty message, got %v", err)
+		}
+	})
 }
