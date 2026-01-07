@@ -4,6 +4,7 @@ package api
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -85,7 +86,7 @@ func TestDoWithRetry_Success(t *testing.T) {
 	}
 }
 
-func TestDoWithRetry_ContextCanceled(t *testing.T) {
+func TestDoWithRetry_ContextCancellation(t *testing.T) {
 	server := testutil.NewMockServer()
 	defer server.Close()
 
@@ -98,7 +99,63 @@ func TestDoWithRetry_ContextCanceled(t *testing.T) {
 	req, _ := http.NewRequestWithContext(ctx, "GET", server.URL()+"/slow", nil)
 
 	_, err := DoWithRetry(ctx, client, req, DefaultRetryConfig())
-	if err == nil {
-		t.Error("expected context canceled error")
+	if err != context.Canceled {
+		t.Errorf("expected context.Canceled, got %v", err)
+	}
+}
+
+func TestDoWithRetry_NilConfig(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	req, _ := http.NewRequest(http.MethodGet, server.URL, nil)
+	resp, err := DoWithRetry(context.Background(), http.DefaultClient, req, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("expected 200, got %d", resp.StatusCode)
+	}
+}
+
+func TestDoWithRetry_NonIdempotentNoRetry(t *testing.T) {
+	callCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		callCount++
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	req, _ := http.NewRequest(http.MethodPost, server.URL, nil)
+	cfg := &RetryConfig{MaxRetries: 3, InitialBackoff: time.Millisecond}
+
+	resp, _ := DoWithRetry(context.Background(), http.DefaultClient, req, cfg)
+	if resp != nil {
+		_ = resp.Body.Close()
+	}
+
+	if callCount != 1 {
+		t.Errorf("expected 1 call (no retry for POST), got %d", callCount)
+	}
+}
+
+func TestSleepWithContext_Cancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	start := time.Now()
+	go func() {
+		time.Sleep(10 * time.Millisecond)
+		cancel()
+	}()
+
+	sleepWithContext(ctx, time.Second)
+	elapsed := time.Since(start)
+
+	if elapsed > 100*time.Millisecond {
+		t.Errorf("sleep should have been cancelled, took %v", elapsed)
 	}
 }
