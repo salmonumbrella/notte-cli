@@ -63,3 +63,58 @@ func TestPrintListOrEmpty_NonSlice(t *testing.T) {
 		t.Fatalf("unexpected error message: %v", err)
 	}
 }
+
+func TestPrintListOrEmpty_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name      string
+		items     any
+		emptyMsg  string
+		wantPrint bool
+		wantErr   bool
+	}{
+		{
+			name:      "nil slice",
+			items:     nil,
+			emptyMsg:  "No items",
+			wantPrint: true,
+			wantErr:   false,
+		},
+		{
+			name:      "empty string slice",
+			items:     []string{},
+			emptyMsg:  "No strings",
+			wantPrint: true,
+			wantErr:   false,
+		},
+		{
+			name:      "non-empty slice",
+			items:     []string{"a", "b"},
+			emptyMsg:  "No items",
+			wantPrint: false,
+			wantErr:   false,
+		},
+		{
+			name:      "not a slice",
+			items:     "string",
+			emptyMsg:  "Error",
+			wantPrint: false,
+			wantErr:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			origFormat := outputFormat
+			outputFormat = "text"
+			t.Cleanup(func() { outputFormat = origFormat })
+
+			printed, err := PrintListOrEmpty(tt.items, tt.emptyMsg)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if printed != tt.wantPrint {
+				t.Errorf("printed = %v, want %v", printed, tt.wantPrint)
+			}
+		})
+	}
+}
