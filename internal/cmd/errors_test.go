@@ -8,38 +8,52 @@ import (
 )
 
 func TestHandleAPIResponse_Success(t *testing.T) {
-	resp := &http.Response{
-		StatusCode: 200,
-		Body:       io.NopCloser(bytes.NewReader(nil)),
+	tests := []struct {
+		name       string
+		statusCode int
+	}{
+		{"200 OK", 200},
+		{"201 Created", 201},
+		{"204 No Content", 204},
 	}
 
-	err := HandleAPIResponse(resp)
-	if err != nil {
-		t.Errorf("expected nil error for 200, got: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := &http.Response{
+				StatusCode: tt.statusCode,
+				Body:       io.NopCloser(bytes.NewReader(nil)),
+			}
+			err := HandleAPIResponse(resp)
+			if err != nil {
+				t.Errorf("expected nil error for %d, got %v", tt.statusCode, err)
+			}
+		})
 	}
 }
 
 func TestHandleAPIResponse_Error(t *testing.T) {
-	body := `{"error":{"code":"not_found","message":"Resource not found"}}`
-	resp := &http.Response{
-		StatusCode: 404,
-		Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+	tests := []struct {
+		name       string
+		statusCode int
+	}{
+		{"400 Bad Request", 400},
+		{"401 Unauthorized", 401},
+		{"404 Not Found", 404},
+		{"500 Internal Server Error", 500},
 	}
 
-	err := HandleAPIResponse(resp)
-	if err == nil {
-		t.Error("expected error for 404, got nil")
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body := `{"error": "test error"}`
+			resp := &http.Response{
+				StatusCode: tt.statusCode,
+				Body:       io.NopCloser(bytes.NewReader([]byte(body))),
+			}
 
-func TestHandleAPIResponse_Unauthorized(t *testing.T) {
-	resp := &http.Response{
-		StatusCode: 401,
-		Body:       io.NopCloser(bytes.NewReader(nil)),
-	}
-
-	err := HandleAPIResponse(resp)
-	if err == nil {
-		t.Error("expected error for 401, got nil")
+			err := HandleAPIResponse(resp)
+			if err == nil {
+				t.Errorf("expected error for %d, got nil", tt.statusCode)
+			}
+		})
 	}
 }
