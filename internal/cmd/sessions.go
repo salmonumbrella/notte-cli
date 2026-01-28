@@ -11,7 +11,8 @@ import (
 var (
 	sessionsStartHeadless      bool
 	sessionsStartBrowser       string
-	sessionsStartTimeout       int
+	sessionsStartIdleTimeout   int
+	sessionsStartMaxDuration   int
 	sessionsStartProxies       bool
 	sessionsStartSolveCaptchas bool
 	sessionsStartViewportW     int
@@ -45,7 +46,8 @@ func init() {
 
 	sessionsStartCmd.Flags().BoolVar(&sessionsStartHeadless, "headless", true, "Run session in headless mode")
 	sessionsStartCmd.Flags().StringVar(&sessionsStartBrowser, "browser", "chromium", "Browser type (chromium, chrome, firefox)")
-	sessionsStartCmd.Flags().IntVar(&sessionsStartTimeout, "timeout", 3, "Session timeout in minutes (1-15)")
+	sessionsStartCmd.Flags().IntVar(&sessionsStartIdleTimeout, "idle-timeout", 0, "Idle timeout in minutes (session closes after this period of inactivity)")
+	sessionsStartCmd.Flags().IntVar(&sessionsStartMaxDuration, "max-duration", 0, "Maximum session lifetime in minutes (absolute maximum, not affected by activity)")
 	sessionsStartCmd.Flags().BoolVar(&sessionsStartProxies, "proxies", false, "Use default proxies")
 	sessionsStartCmd.Flags().BoolVar(&sessionsStartSolveCaptchas, "solve-captchas", false, "Automatically solve captchas")
 	sessionsStartCmd.Flags().IntVar(&sessionsStartViewportW, "viewport-width", 0, "Viewport width in pixels")
@@ -111,9 +113,14 @@ func runSessionsStart(cmd *cobra.Command, args []string) error {
 		body.BrowserType = &browserType
 	}
 
-	// Set timeout if provided
-	if sessionsStartTimeout > 0 {
-		body.TimeoutMinutes = &sessionsStartTimeout
+	// Set idle timeout if provided
+	if sessionsStartIdleTimeout > 0 {
+		body.IdleTimeoutMinutes = &sessionsStartIdleTimeout
+	}
+
+	// Set max duration if provided
+	if sessionsStartMaxDuration > 0 {
+		body.MaxDurationMinutes = &sessionsStartMaxDuration
 	}
 
 	// Set proxies if flag was provided

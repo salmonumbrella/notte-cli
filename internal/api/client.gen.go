@@ -33,6 +33,7 @@ const (
 const (
 	ApiSessionStartRequestBrowserTypeChrome        ApiSessionStartRequestBrowserType = "chrome"
 	ApiSessionStartRequestBrowserTypeChromeNightly ApiSessionStartRequestBrowserType = "chrome-nightly"
+	ApiSessionStartRequestBrowserTypeChromeTurbo   ApiSessionStartRequestBrowserType = "chrome-turbo"
 	ApiSessionStartRequestBrowserTypeChromium      ApiSessionStartRequestBrowserType = "chromium"
 	ApiSessionStartRequestBrowserTypeFirefox       ApiSessionStartRequestBrowserType = "firefox"
 )
@@ -56,6 +57,12 @@ const (
 	DeleteCreditCardResponseStatusSuccess DeleteCreditCardResponseStatus = "success"
 )
 
+// Defines values for DeleteFunctionResponseStatus.
+const (
+	DeleteFunctionResponseStatusFailure DeleteFunctionResponseStatus = "failure"
+	DeleteFunctionResponseStatusSuccess DeleteFunctionResponseStatus = "success"
+)
+
 // Defines values for DeletePersonaResponseStatus.
 const (
 	DeletePersonaResponseStatusFailure DeletePersonaResponseStatus = "failure"
@@ -74,23 +81,25 @@ const (
 	DeleteVaultResponseStatusSuccess DeleteVaultResponseStatus = "success"
 )
 
-// Defines values for DeleteWorkflowResponseStatus.
+// Defines values for FunctionRunUpdateRequestStatus.
 const (
-	DeleteWorkflowResponseStatusFailure DeleteWorkflowResponseStatus = "failure"
-	DeleteWorkflowResponseStatusSuccess DeleteWorkflowResponseStatus = "success"
+	FunctionRunUpdateRequestStatusActive FunctionRunUpdateRequestStatus = "active"
+	FunctionRunUpdateRequestStatusClosed FunctionRunUpdateRequestStatus = "closed"
+	FunctionRunUpdateRequestStatusFailed FunctionRunUpdateRequestStatus = "failed"
 )
 
-// Defines values for GetWorkflowRunResponseStatus.
+// Defines values for GetFunctionRunResponseStatus.
 const (
-	GetWorkflowRunResponseStatusActive GetWorkflowRunResponseStatus = "active"
-	GetWorkflowRunResponseStatusClosed GetWorkflowRunResponseStatus = "closed"
-	GetWorkflowRunResponseStatusFailed GetWorkflowRunResponseStatus = "failed"
+	GetFunctionRunResponseStatusActive GetFunctionRunResponseStatus = "active"
+	GetFunctionRunResponseStatusClosed GetFunctionRunResponseStatus = "closed"
+	GetFunctionRunResponseStatusFailed GetFunctionRunResponseStatus = "failed"
 )
 
 // Defines values for GlobalScrapeRequestBrowserType.
 const (
 	GlobalScrapeRequestBrowserTypeChrome        GlobalScrapeRequestBrowserType = "chrome"
 	GlobalScrapeRequestBrowserTypeChromeNightly GlobalScrapeRequestBrowserType = "chrome-nightly"
+	GlobalScrapeRequestBrowserTypeChromeTurbo   GlobalScrapeRequestBrowserType = "chrome-turbo"
 	GlobalScrapeRequestBrowserTypeChromium      GlobalScrapeRequestBrowserType = "chromium"
 	GlobalScrapeRequestBrowserTypeFirefox       GlobalScrapeRequestBrowserType = "firefox"
 )
@@ -343,6 +352,7 @@ const (
 const (
 	Chrome        SessionResponseBrowserType = "chrome"
 	ChromeNightly SessionResponseBrowserType = "chrome-nightly"
+	ChromeTurbo   SessionResponseBrowserType = "chrome-turbo"
 	Chromium      SessionResponseBrowserType = "chromium"
 	Firefox       SessionResponseBrowserType = "firefox"
 )
@@ -382,17 +392,10 @@ const (
 	Proofs     SubscriptionType = "proofs"
 )
 
-// Defines values for UpdateWorkflowRunResponseStatus.
+// Defines values for UpdateFunctionRunResponseStatus.
 const (
-	Stopped UpdateWorkflowRunResponseStatus = "stopped"
-	Updated UpdateWorkflowRunResponseStatus = "updated"
-)
-
-// Defines values for WorkflowRunUpdateRequestStatus.
-const (
-	WorkflowRunUpdateRequestStatusActive WorkflowRunUpdateRequestStatus = "active"
-	WorkflowRunUpdateRequestStatusClosed WorkflowRunUpdateRequestStatus = "closed"
-	WorkflowRunUpdateRequestStatusFailed WorkflowRunUpdateRequestStatus = "failed"
+	Stopped UpdateFunctionRunResponseStatus = "stopped"
+	Updated UpdateFunctionRunResponseStatus = "updated"
 )
 
 // ActionParameter defines model for ActionParameter.
@@ -455,6 +458,15 @@ type AddCreditCardRequest struct {
 type AddCreditCardResponse struct {
 	// Status Status of the created credit card
 	Status string `json:"status"`
+}
+
+// AgentFunctionCodeResponse defines model for AgentFunctionCodeResponse.
+type AgentFunctionCodeResponse struct {
+	// JsonActions Json actions to replicate agent steps
+	JsonActions []map[string]interface{} `json:"json_actions"`
+
+	// PythonScript Python script to replicate agent steps
+	PythonScript string `json:"python_script"`
 }
 
 // AgentResponse defines model for AgentResponse.
@@ -526,15 +538,6 @@ type AgentStatusResponse struct {
 
 	// Url The URL that the agent started on
 	Url *string `json:"url"`
-}
-
-// AgentWorkflowCodeResponse defines model for AgentWorkflowCodeResponse.
-type AgentWorkflowCodeResponse struct {
-	// JsonActions Json actions to replicate agent steps
-	JsonActions []map[string]interface{} `json:"json_actions"`
-
-	// PythonScript Python script to replicate agent steps
-	PythonScript string `json:"python_script"`
 }
 
 // ApiAgentStartRequest defines model for ApiAgentStartRequest.
@@ -610,6 +613,15 @@ type ApiSessionStartRequest struct {
 	// Headless Whether to run the session in headless mode.
 	Headless *bool `json:"headless,omitempty"`
 
+	// IdleTimeoutMinutes Idle timeout in minutes. Session closes after this period of inactivity (resets on each operation).
+	IdleTimeoutMinutes *int `json:"idle_timeout_minutes,omitempty"`
+
+	// MaxDurationMinutes Maximum session lifetime in minutes (absolute maximum, not affected by activity).
+	MaxDurationMinutes *int `json:"max_duration_minutes,omitempty"`
+
+	// Profile Browser profile configuration for state persistence
+	Profile interface{} `json:"profile"`
+
 	// Proxies List of custom proxies to use for the session. If True, the default proxies will be used.
 	Proxies *ApiSessionStartRequest_Proxies `json:"proxies,omitempty"`
 
@@ -618,9 +630,6 @@ type ApiSessionStartRequest struct {
 
 	// SolveCaptchas Whether to try to automatically solve captchas
 	SolveCaptchas *bool `json:"solve_captchas,omitempty"`
-
-	// TimeoutMinutes Session timeout in minutes. Cannot exceed the global timeout.
-	TimeoutMinutes *int `json:"timeout_minutes,omitempty"`
 
 	// UseFileStorage Whether FileStorage should be attached to the session.
 	UseFileStorage *bool `json:"use_file_storage,omitempty"`
@@ -670,22 +679,22 @@ type BodyFileUploadStorageUploadsFilenamePost struct {
 	File openapi_types.File `json:"file"`
 }
 
-// BodySessionCookiesSetSessionsSessionIdCookiesPost defines model for Body_session_cookies_set_sessions__session_id__cookies_post.
-type BodySessionCookiesSetSessionsSessionIdCookiesPost struct {
-	Cookies []Cookie `json:"cookies"`
-}
-
-// BodyWorkflowCreateWorkflowsPost defines model for Body_workflow_create_workflows_post.
-type BodyWorkflowCreateWorkflowsPost struct {
+// BodyFunctionCreateFunctionsPost defines model for Body_function_create_functions_post.
+type BodyFunctionCreateFunctionsPost struct {
 	Description *string            `json:"description"`
 	File        openapi_types.File `json:"file"`
 	Name        *string            `json:"name"`
 	Shared      *bool              `json:"shared,omitempty"`
 }
 
-// BodyWorkflowUpdateWorkflowsWorkflowIdPost defines model for Body_workflow_update_workflows__workflow_id__post.
-type BodyWorkflowUpdateWorkflowsWorkflowIdPost struct {
+// BodyFunctionUpdateFunctionsFunctionIdPost defines model for Body_function_update_functions__function_id__post.
+type BodyFunctionUpdateFunctionsFunctionIdPost struct {
 	File openapi_types.File `json:"file"`
+}
+
+// BodySessionCookiesSetSessionsSessionIdCookiesPost defines model for Body_session_cookies_set_sessions__session_id__cookies_post.
+type BodySessionCookiesSetSessionsSessionIdCookiesPost struct {
+	Cookies []Cookie `json:"cookies"`
 }
 
 // BoundingBox defines model for BoundingBox.
@@ -720,8 +729,11 @@ type CheckActionInput struct {
 	PressEnter  *bool                      `json:"press_enter"`
 	Selector    *CheckActionInput_Selector `json:"selector"`
 	TextLabel   *string                    `json:"text_label"`
-	Type        *string                    `json:"type,omitempty"`
-	Value       bool                       `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int    `json:"timeout,omitempty"`
+	Type    *string `json:"type,omitempty"`
+	Value   bool    `json:"value"`
 }
 
 // CheckActionInputSelector0 defines model for .
@@ -740,8 +752,11 @@ type CheckActionOutput struct {
 	PressEnter  *bool                       `json:"press_enter"`
 	Selector    *CheckActionOutput_Selector `json:"selector"`
 	TextLabel   *string                     `json:"text_label"`
-	Type        *string                     `json:"type,omitempty"`
-	Value       bool                        `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int    `json:"timeout,omitempty"`
+	Type    *string `json:"type,omitempty"`
+	Value   bool    `json:"value"`
 }
 
 // CheckActionOutputSelector0 defines model for .
@@ -761,7 +776,10 @@ type ClickActionInput struct {
 	PressEnter  *bool                      `json:"press_enter"`
 	Selector    *ClickActionInput_Selector `json:"selector"`
 	TextLabel   *string                    `json:"text_label"`
-	Type        *string                    `json:"type,omitempty"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int    `json:"timeout,omitempty"`
+	Type    *string `json:"type,omitempty"`
 }
 
 // ClickActionInputSelector0 defines model for .
@@ -780,7 +798,10 @@ type ClickActionOutput struct {
 	PressEnter  *bool                       `json:"press_enter"`
 	Selector    *ClickActionOutput_Selector `json:"selector"`
 	TextLabel   *string                     `json:"text_label"`
-	Type        *string                     `json:"type,omitempty"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int    `json:"timeout,omitempty"`
+	Type    *string `json:"type,omitempty"`
 }
 
 // ClickActionOutputSelector0 defines model for .
@@ -907,6 +928,18 @@ type DeleteCreditCardResponse struct {
 // DeleteCreditCardResponseStatus Status of the deletion
 type DeleteCreditCardResponseStatus string
 
+// DeleteFunctionResponse defines model for DeleteFunctionResponse.
+type DeleteFunctionResponse struct {
+	// Message The message of the deletion
+	Message string `json:"message"`
+
+	// Status The status of the deletion
+	Status DeleteFunctionResponseStatus `json:"status"`
+}
+
+// DeleteFunctionResponseStatus The status of the deletion
+type DeleteFunctionResponseStatus string
+
 // DeletePersonaResponse defines model for DeletePersonaResponse.
 type DeletePersonaResponse struct {
 	// Message Message of the deletion
@@ -943,18 +976,6 @@ type DeleteVaultResponse struct {
 // DeleteVaultResponseStatus Status of the deletion
 type DeleteVaultResponseStatus string
 
-// DeleteWorkflowResponse defines model for DeleteWorkflowResponse.
-type DeleteWorkflowResponse struct {
-	// Message The message of the deletion
-	Message string `json:"message"`
-
-	// Status The status of the deletion
-	Status DeleteWorkflowResponseStatus `json:"status"`
-}
-
-// DeleteWorkflowResponseStatus The status of the deletion
-type DeleteWorkflowResponseStatus string
-
 // DownloadFileActionInput defines model for DownloadFileAction-Input.
 type DownloadFileActionInput struct {
 	Category    *string                           `json:"category,omitempty"`
@@ -964,7 +985,10 @@ type DownloadFileActionInput struct {
 	PressEnter  *bool                             `json:"press_enter"`
 	Selector    *DownloadFileActionInput_Selector `json:"selector"`
 	TextLabel   *string                           `json:"text_label"`
-	Type        *string                           `json:"type,omitempty"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int    `json:"timeout,omitempty"`
+	Type    *string `json:"type,omitempty"`
 }
 
 // DownloadFileActionInputSelector0 defines model for .
@@ -983,7 +1007,10 @@ type DownloadFileActionOutput struct {
 	PressEnter  *bool                              `json:"press_enter"`
 	Selector    *DownloadFileActionOutput_Selector `json:"selector"`
 	TextLabel   *string                            `json:"text_label"`
-	Type        *string                            `json:"type,omitempty"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int    `json:"timeout,omitempty"`
+	Type    *string `json:"type,omitempty"`
 }
 
 // DownloadFileActionOutputSelector0 defines model for .
@@ -1062,8 +1089,11 @@ type FallbackFillActionInput struct {
 	PressEnter      *bool                             `json:"press_enter"`
 	Selector        *FallbackFillActionInput_Selector `json:"selector"`
 	TextLabel       *string                           `json:"text_label"`
-	Type            *string                           `json:"type,omitempty"`
-	Value           FallbackFillActionInput_Value     `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int                          `json:"timeout,omitempty"`
+	Type    *string                       `json:"type,omitempty"`
+	Value   FallbackFillActionInput_Value `json:"value"`
 }
 
 // FallbackFillActionInputSelector0 defines model for .
@@ -1094,8 +1124,11 @@ type FallbackFillActionOutput struct {
 	PressEnter      *bool                              `json:"press_enter"`
 	Selector        *FallbackFillActionOutput_Selector `json:"selector"`
 	TextLabel       *string                            `json:"text_label"`
-	Type            *string                            `json:"type,omitempty"`
-	Value           FallbackFillActionOutput_Value     `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int                           `json:"timeout,omitempty"`
+	Type    *string                        `json:"type,omitempty"`
+	Value   FallbackFillActionOutput_Value `json:"value"`
 }
 
 // FallbackFillActionOutputSelector0 defines model for .
@@ -1139,8 +1172,11 @@ type FillActionInput struct {
 	PressEnter      *bool                     `json:"press_enter"`
 	Selector        *FillActionInput_Selector `json:"selector"`
 	TextLabel       *string                   `json:"text_label"`
-	Type            *string                   `json:"type,omitempty"`
-	Value           FillActionInput_Value     `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int                  `json:"timeout,omitempty"`
+	Type    *string               `json:"type,omitempty"`
+	Value   FillActionInput_Value `json:"value"`
 }
 
 // FillActionInputSelector0 defines model for .
@@ -1171,8 +1207,11 @@ type FillActionOutput struct {
 	PressEnter      *bool                      `json:"press_enter"`
 	Selector        *FillActionOutput_Selector `json:"selector"`
 	TextLabel       *string                    `json:"text_label"`
-	Type            *string                    `json:"type,omitempty"`
-	Value           FillActionOutput_Value     `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int                   `json:"timeout,omitempty"`
+	Type    *string                `json:"type,omitempty"`
+	Value   FillActionOutput_Value `json:"value"`
 }
 
 // FillActionOutputSelector0 defines model for .
@@ -1222,6 +1261,27 @@ type FrameData struct {
 	FrameUrl string `json:"frameUrl"`
 }
 
+// FunctionRunUpdateRequest defines model for FunctionRunUpdateRequest.
+type FunctionRunUpdateRequest struct {
+	// Logs The logs of the workflow run
+	Logs *[]string `json:"logs,omitempty"`
+
+	// Result The result of the workflow run
+	Result interface{} `json:"result"`
+
+	// SessionId The ID of the session
+	SessionId *string `json:"session_id"`
+
+	// Status The status of the workflow run
+	Status FunctionRunUpdateRequestStatus `json:"status"`
+
+	// Variables The variables of the workflow run
+	Variables *map[string]interface{} `json:"variables"`
+}
+
+// FunctionRunUpdateRequestStatus The status of the workflow run
+type FunctionRunUpdateRequestStatus string
+
 // GetCookiesResponse defines model for GetCookiesResponse.
 type GetCookiesResponse struct {
 	Cookies []Cookie `json:"cookies"`
@@ -1237,13 +1297,16 @@ type GetCreditCardResponse struct {
 	CreditCard CreditCardDictOutput `json:"credit_card"`
 }
 
-// GetWorkflowResponse defines model for GetWorkflowResponse.
-type GetWorkflowResponse struct {
+// GetFunctionResponse defines model for GetFunctionResponse.
+type GetFunctionResponse struct {
 	// CreatedAt The creation time of the workflow
 	CreatedAt time.Time `json:"created_at"`
 
 	// Description The description of the workflow
 	Description *string `json:"description"`
+
+	// FunctionId The ID of the function
+	FunctionId string `json:"function_id"`
 
 	// LatestVersion The version of the workflow
 	LatestVersion string `json:"latest_version"`
@@ -1267,15 +1330,19 @@ type GetWorkflowResponse struct {
 	Variables *[]interface{} `json:"variables"`
 
 	// Versions The versions of the workflow
-	Versions []string `json:"versions"`
-
-	// WorkflowId The ID of the workflow
-	WorkflowId string `json:"workflow_id"`
+	Versions   []string `json:"versions"`
+	WorkflowId *string  `json:"workflow_id,omitempty"`
 }
 
-// GetWorkflowRunResponse defines model for GetWorkflowRunResponse.
-type GetWorkflowRunResponse struct {
+// GetFunctionRunResponse defines model for GetFunctionRunResponse.
+type GetFunctionRunResponse struct {
 	CreatedAt time.Time `json:"created_at"`
+
+	// FunctionId The ID of the function
+	FunctionId string `json:"function_id"`
+
+	// FunctionRunId The ID of the function run
+	FunctionRunId string `json:"function_run_id"`
 
 	// Local Whether the workflow has been run locally or on the cloud
 	Local *bool `json:"local,omitempty"`
@@ -1288,25 +1355,28 @@ type GetWorkflowRunResponse struct {
 
 	// SessionId The ID of the session
 	SessionId *string                      `json:"session_id"`
-	Status    GetWorkflowRunResponseStatus `json:"status"`
+	Status    GetFunctionRunResponseStatus `json:"status"`
 	UpdatedAt time.Time                    `json:"updated_at"`
 
 	// Variables The variables of the workflow run
 	Variables     *map[string]interface{} `json:"variables"`
-	WorkflowId    string                  `json:"workflow_id"`
-	WorkflowRunId string                  `json:"workflow_run_id"`
+	WorkflowId    *string                 `json:"workflow_id,omitempty"`
+	WorkflowRunId *string                 `json:"workflow_run_id,omitempty"`
 }
 
-// GetWorkflowRunResponseStatus defines model for GetWorkflowRunResponse.Status.
-type GetWorkflowRunResponseStatus string
+// GetFunctionRunResponseStatus defines model for GetFunctionRunResponse.Status.
+type GetFunctionRunResponseStatus string
 
-// GetWorkflowWithLinkResponse defines model for GetWorkflowWithLinkResponse.
-type GetWorkflowWithLinkResponse struct {
+// GetFunctionWithLinkResponse defines model for GetFunctionWithLinkResponse.
+type GetFunctionWithLinkResponse struct {
 	// CreatedAt The creation time of the workflow
 	CreatedAt time.Time `json:"created_at"`
 
 	// Description The description of the workflow
 	Description *string `json:"description"`
+
+	// FunctionId The ID of the function
+	FunctionId string `json:"function_id"`
 
 	// LatestVersion The version of the workflow
 	LatestVersion string `json:"latest_version"`
@@ -1333,10 +1403,8 @@ type GetWorkflowWithLinkResponse struct {
 	Variables *[]interface{} `json:"variables"`
 
 	// Versions The versions of the workflow
-	Versions []string `json:"versions"`
-
-	// WorkflowId The ID of the workflow
-	WorkflowId string `json:"workflow_id"`
+	Versions   []string `json:"versions"`
+	WorkflowId *string  `json:"workflow_id,omitempty"`
 }
 
 // GlobalScrapeRequest defines model for GlobalScrapeRequest.
@@ -1353,17 +1421,26 @@ type GlobalScrapeRequest struct {
 	// Headless Whether to run the session in headless mode.
 	Headless *bool `json:"headless,omitempty"`
 
+	// IdleTimeoutMinutes Idle timeout in minutes. Session closes after this period of inactivity (resets on each operation).
+	IdleTimeoutMinutes *int `json:"idle_timeout_minutes,omitempty"`
+
 	// IgnoredTags HTML tags to ignore from the page
 	IgnoredTags *[]interface{} `json:"ignored_tags"`
 
 	// Instructions Additional instructions to use for the scrape. E.g. 'Extract only the title, date and content of the articles.'
 	Instructions *string `json:"instructions"`
 
+	// MaxDurationMinutes Maximum session lifetime in minutes (absolute maximum, not affected by activity).
+	MaxDurationMinutes *int `json:"max_duration_minutes,omitempty"`
+
 	// OnlyImages Whether to only scrape images from the page. If True, the page content is excluded.
 	OnlyImages *bool `json:"only_images,omitempty"`
 
 	// OnlyMainContent Whether to only scrape the main content of the page. If True, navbars, footers, etc. are excluded.
 	OnlyMainContent *bool `json:"only_main_content,omitempty"`
+
+	// Profile Browser profile configuration for state persistence
+	Profile interface{} `json:"profile"`
 
 	// Proxies List of custom proxies to use for the session. If True, the default proxies will be used.
 	Proxies *GlobalScrapeRequest_Proxies `json:"proxies,omitempty"`
@@ -1380,12 +1457,12 @@ type GlobalScrapeRequest struct {
 	// ScreenshotType The type of screenshot to use for the session.
 	ScreenshotType *GlobalScrapeRequestScreenshotType `json:"screenshot_type,omitempty"`
 
-	// SolveCaptchas Whether to try to automatically solve captchas
-	SolveCaptchas *bool `json:"solve_captchas,omitempty"`
+	// Selector Playwright selector to scope the scrape to. Only content inside this selector will be scraped.
+	Selector *string `json:"selector"`
 
-	// TimeoutMinutes Session timeout in minutes. Cannot exceed the global timeout.
-	TimeoutMinutes *int   `json:"timeout_minutes,omitempty"`
-	Url            string `json:"url"`
+	// SolveCaptchas Whether to try to automatically solve captchas
+	SolveCaptchas *bool  `json:"solve_captchas,omitempty"`
+	Url           string `json:"url"`
 
 	// UseFileStorage Whether FileStorage should be attached to the session.
 	UseFileStorage *bool `json:"use_file_storage,omitempty"`
@@ -1570,8 +1647,11 @@ type MultiFactorFillActionInput struct {
 	PressEnter      *bool                                `json:"press_enter"`
 	Selector        *MultiFactorFillActionInput_Selector `json:"selector"`
 	TextLabel       *string                              `json:"text_label"`
-	Type            *string                              `json:"type,omitempty"`
-	Value           MultiFactorFillActionInput_Value     `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int                             `json:"timeout,omitempty"`
+	Type    *string                          `json:"type,omitempty"`
+	Value   MultiFactorFillActionInput_Value `json:"value"`
 }
 
 // MultiFactorFillActionInputSelector0 defines model for .
@@ -1602,8 +1682,11 @@ type MultiFactorFillActionOutput struct {
 	PressEnter      *bool                                 `json:"press_enter"`
 	Selector        *MultiFactorFillActionOutput_Selector `json:"selector"`
 	TextLabel       *string                               `json:"text_label"`
-	Type            *string                               `json:"type,omitempty"`
-	Value           MultiFactorFillActionOutput_Value     `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int                              `json:"timeout,omitempty"`
+	Type    *string                           `json:"type,omitempty"`
+	Value   MultiFactorFillActionOutput_Value `json:"value"`
 }
 
 // MultiFactorFillActionOutputSelector0 defines model for .
@@ -1659,9 +1742,9 @@ type NodeSelectors struct {
 
 // NotteProxy defines model for NotteProxy.
 type NotteProxy struct {
-	Geolocation interface{} `json:"geolocation"`
-	Id          *string     `json:"id"`
-	Type        *string     `json:"type,omitempty"`
+	Country interface{} `json:"country"`
+	Id      *string     `json:"id"`
+	Type    *string     `json:"type,omitempty"`
 }
 
 // NudgePromptRequest defines model for NudgePromptRequest.
@@ -1710,20 +1793,20 @@ type PaginatedResponseAgentResponse struct {
 	PageSize    int             `json:"page_size"`
 }
 
-// PaginatedResponseGetWorkflowResponse defines model for PaginatedResponse_GetWorkflowResponse_.
-type PaginatedResponseGetWorkflowResponse struct {
+// PaginatedResponseGetFunctionResponse defines model for PaginatedResponse_GetFunctionResponse_.
+type PaginatedResponseGetFunctionResponse struct {
 	HasNext     bool                  `json:"has_next"`
 	HasPrevious *bool                 `json:"has_previous,omitempty"`
-	Items       []GetWorkflowResponse `json:"items"`
+	Items       []GetFunctionResponse `json:"items"`
 	Page        int                   `json:"page"`
 	PageSize    int                   `json:"page_size"`
 }
 
-// PaginatedResponseGetWorkflowRunResponse defines model for PaginatedResponse_GetWorkflowRunResponse_.
-type PaginatedResponseGetWorkflowRunResponse struct {
+// PaginatedResponseGetFunctionRunResponse defines model for PaginatedResponse_GetFunctionRunResponse_.
+type PaginatedResponseGetFunctionRunResponse struct {
 	HasNext     bool                     `json:"has_next"`
 	HasPrevious *bool                    `json:"has_previous,omitempty"`
-	Items       []GetWorkflowRunResponse `json:"items"`
+	Items       []GetFunctionRunResponse `json:"items"`
 	Page        int                      `json:"page"`
 	PageSize    int                      `json:"page_size"`
 }
@@ -1733,6 +1816,15 @@ type PaginatedResponsePersonaResponse struct {
 	HasNext     bool              `json:"has_next"`
 	HasPrevious *bool             `json:"has_previous,omitempty"`
 	Items       []PersonaResponse `json:"items"`
+	Page        int               `json:"page"`
+	PageSize    int               `json:"page_size"`
+}
+
+// PaginatedResponseProfileResponse defines model for PaginatedResponse_ProfileResponse_.
+type PaginatedResponseProfileResponse struct {
+	HasNext     bool              `json:"has_next"`
+	HasPrevious *bool             `json:"has_previous,omitempty"`
+	Items       []ProfileResponse `json:"items"`
 	Page        int               `json:"page"`
 	PageSize    int               `json:"page_size"`
 }
@@ -1812,9 +1904,31 @@ type PressKeyAction struct {
 	Type        *string `json:"type,omitempty"`
 }
 
-// ProxyGeolocation defines model for ProxyGeolocation.
-type ProxyGeolocation struct {
-	Country ProxyGeolocationCountry `json:"country"`
+// ProfileCreateRequest defines model for ProfileCreateRequest.
+type ProfileCreateRequest struct {
+	// Name Name of the profile
+	Name *string `json:"name"`
+}
+
+// ProfileDeleteResponse defines model for ProfileDeleteResponse.
+type ProfileDeleteResponse struct {
+	Message *string `json:"message,omitempty"`
+	Success *bool   `json:"success,omitempty"`
+}
+
+// ProfileResponse defines model for ProfileResponse.
+type ProfileResponse struct {
+	// CreatedAt Profile creation timestamp
+	CreatedAt time.Time `json:"created_at"`
+
+	// Name Profile name
+	Name *string `json:"name"`
+
+	// ProfileId Profile ID (format: notte-profile-{16 hex chars})
+	ProfileId string `json:"profile_id"`
+
+	// UpdatedAt Profile last update timestamp
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // ProxyGeolocationCountry defines model for ProxyGeolocationCountry.
@@ -1907,6 +2021,9 @@ type ScrapeFromHtmlRequest struct {
 	// ScrapeLinks Whether to scrape links from the page. Links are scraped by default.
 	ScrapeLinks *bool `json:"scrape_links,omitempty"`
 
+	// Selector Playwright selector to scope the scrape to. Only content inside this selector will be scraped.
+	Selector *string `json:"selector"`
+
 	// UseLinkPlaceholders Whether to use link/image placeholders to reduce the number of tokens in the prompt and hallucinations. However this is an experimental feature and might not work as expected.
 	UseLinkPlaceholders *bool `json:"use_link_placeholders,omitempty"`
 }
@@ -1933,6 +2050,9 @@ type ScrapeRequest struct {
 
 	// ScrapeLinks Whether to scrape links from the page. Links are scraped by default.
 	ScrapeLinks *bool `json:"scrape_links,omitempty"`
+
+	// Selector Playwright selector to scope the scrape to. Only content inside this selector will be scraped.
+	Selector *string `json:"selector"`
 
 	// UseLinkPlaceholders Whether to use link/image placeholders to reduce the number of tokens in the prompt and hallucinations. However this is an experimental feature and might not work as expected.
 	UseLinkPlaceholders *bool `json:"use_link_placeholders,omitempty"`
@@ -1991,8 +2111,11 @@ type SelectDropdownOptionActionInput struct {
 	PressEnter  *bool                                     `json:"press_enter"`
 	Selector    *SelectDropdownOptionActionInput_Selector `json:"selector"`
 	TextLabel   *string                                   `json:"text_label"`
-	Type        *string                                   `json:"type,omitempty"`
-	Value       SelectDropdownOptionActionInput_Value     `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int                                  `json:"timeout,omitempty"`
+	Type    *string                               `json:"type,omitempty"`
+	Value   SelectDropdownOptionActionInput_Value `json:"value"`
 }
 
 // SelectDropdownOptionActionInputSelector0 defines model for .
@@ -2022,8 +2145,11 @@ type SelectDropdownOptionActionOutput struct {
 	PressEnter  *bool                                      `json:"press_enter"`
 	Selector    *SelectDropdownOptionActionOutput_Selector `json:"selector"`
 	TextLabel   *string                                    `json:"text_label"`
-	Type        *string                                    `json:"type,omitempty"`
-	Value       SelectDropdownOptionActionOutput_Value     `json:"value"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int                                   `json:"timeout,omitempty"`
+	Type    *string                                `json:"type,omitempty"`
+	Value   SelectDropdownOptionActionOutput_Value `json:"value"`
 }
 
 // SelectDropdownOptionActionOutputSelector0 defines model for .
@@ -2058,9 +2184,21 @@ type SessionOffsetResponse struct {
 	Offset int `json:"offset"`
 }
 
+// SessionProfile defines model for SessionProfile.
+type SessionProfile struct {
+	// Id Profile ID to use for this session
+	Id string `json:"id"`
+
+	// Persist Whether to save browser state to profile on session close
+	Persist *bool `json:"persist,omitempty"`
+}
+
 // SessionResponse defines model for SessionResponse.
 type SessionResponse struct {
 	BrowserType *SessionResponseBrowserType `json:"browser_type,omitempty"`
+
+	// CdpUrl The URL to connect to the CDP server.
+	CdpUrl *string `json:"cdp_url"`
 
 	// ClosedAt Session closing time
 	ClosedAt *string `json:"closed_at"`
@@ -2077,8 +2215,17 @@ type SessionResponse struct {
 	// Error Error message if the operation failed to complete
 	Error *string `json:"error"`
 
+	// Headless Whether to run the session in headless mode.
+	Headless *bool `json:"headless,omitempty"`
+
+	// IdleTimeoutMinutes Session idle timeout in minutes. Will timeout if now() > last access time + idle_timeout_minutes
+	IdleTimeoutMinutes int `json:"idle_timeout_minutes"`
+
 	// LastAccessedAt Last access time
 	LastAccessedAt time.Time `json:"last_accessed_at"`
+
+	// MaxDurationMinutes Session max duration in minutes. Will timeout if now() > creation time + max_duration_minutes
+	MaxDurationMinutes *int `json:"max_duration_minutes,omitempty"`
 
 	// NetworkRequestBytes Total byte usage for network requests.
 	NetworkRequestBytes *int `json:"network_request_bytes,omitempty"`
@@ -2092,17 +2239,28 @@ type SessionResponse struct {
 	// SessionId The ID of the session (created or existing). Use this ID to interact with the session for the next operation.
 	SessionId string `json:"session_id"`
 
+	// SolveCaptchas Whether to solve captchas.
+	SolveCaptchas *bool `json:"solve_captchas"`
+
 	// Status Session status
 	Status SessionResponseStatus `json:"status"`
 
 	// Steps Steps of the session
 	Steps *[]map[string]interface{} `json:"steps,omitempty"`
-
-	// TimeoutMinutes Session timeout in minutes. Will timeout if now() > last access time + timeout_minutes
-	TimeoutMinutes int `json:"timeout_minutes"`
+	// Deprecated: this property has been marked as deprecated upstream, but no `x-deprecated-reason` was set
+	TimeoutMinutes *int `json:"timeout_minutes,omitempty"`
 
 	// UseFileStorage Whether FileStorage was attached to the session.
 	UseFileStorage *bool `json:"use_file_storage,omitempty"`
+
+	// UserAgent The user agent to use for the session
+	UserAgent *string `json:"user_agent"`
+
+	// ViewportHeight The height of the viewport
+	ViewportHeight *int `json:"viewport_height"`
+
+	// ViewportWidth The width of the viewport
+	ViewportWidth *int `json:"viewport_width"`
 }
 
 // SessionResponseBrowserType defines model for SessionResponse.BrowserType.
@@ -2181,16 +2339,21 @@ type TabsData struct {
 	Url   string `json:"url"`
 }
 
-// UpdateWorkflowRunResponse defines model for UpdateWorkflowRunResponse.
-type UpdateWorkflowRunResponse struct {
-	Status        *UpdateWorkflowRunResponseStatus `json:"status,omitempty"`
+// UpdateFunctionRunResponse defines model for UpdateFunctionRunResponse.
+type UpdateFunctionRunResponse struct {
+	// FunctionId The ID of the function
+	FunctionId string `json:"function_id"`
+
+	// FunctionRunId The ID of the function run
+	FunctionRunId string                           `json:"function_run_id"`
+	Status        *UpdateFunctionRunResponseStatus `json:"status,omitempty"`
 	UpdatedAt     time.Time                        `json:"updated_at"`
-	WorkflowId    string                           `json:"workflow_id"`
-	WorkflowRunId string                           `json:"workflow_run_id"`
+	WorkflowId    *string                          `json:"workflow_id,omitempty"`
+	WorkflowRunId *string                          `json:"workflow_run_id,omitempty"`
 }
 
-// UpdateWorkflowRunResponseStatus defines model for UpdateWorkflowRunResponse.Status.
-type UpdateWorkflowRunResponseStatus string
+// UpdateFunctionRunResponseStatus defines model for UpdateFunctionRunResponse.Status.
+type UpdateFunctionRunResponseStatus string
 
 // UploadFileActionInput defines model for UploadFileAction-Input.
 type UploadFileActionInput struct {
@@ -2202,7 +2365,10 @@ type UploadFileActionInput struct {
 	PressEnter  *bool                           `json:"press_enter"`
 	Selector    *UploadFileActionInput_Selector `json:"selector"`
 	TextLabel   *string                         `json:"text_label"`
-	Type        *string                         `json:"type,omitempty"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int    `json:"timeout,omitempty"`
+	Type    *string `json:"type,omitempty"`
 }
 
 // UploadFileActionInputSelector0 defines model for .
@@ -2222,7 +2388,10 @@ type UploadFileActionOutput struct {
 	PressEnter  *bool                            `json:"press_enter"`
 	Selector    *UploadFileActionOutput_Selector `json:"selector"`
 	TextLabel   *string                          `json:"text_label"`
-	Type        *string                          `json:"type,omitempty"`
+
+	// Timeout Action timeout in milliseconds
+	Timeout *int    `json:"timeout,omitempty"`
+	Type    *string `json:"type,omitempty"`
 }
 
 // UploadFileActionOutputSelector0 defines model for .
@@ -2334,27 +2503,6 @@ type WebSocketUrls struct {
 	Recording string `json:"recording"`
 }
 
-// WorkflowRunUpdateRequest defines model for WorkflowRunUpdateRequest.
-type WorkflowRunUpdateRequest struct {
-	// Logs The logs of the workflow run
-	Logs *[]string `json:"logs,omitempty"`
-
-	// Result The result of the workflow run
-	Result interface{} `json:"result"`
-
-	// SessionId The ID of the session
-	SessionId *string `json:"session_id"`
-
-	// Status The status of the workflow run
-	Status WorkflowRunUpdateRequestStatus `json:"status"`
-
-	// Variables The variables of the workflow run
-	Variables *map[string]interface{} `json:"variables"`
-}
-
-// WorkflowRunUpdateRequestStatus The status of the workflow run
-type WorkflowRunUpdateRequestStatus string
-
 // WorkflowScheduleCreateRequest defines model for WorkflowScheduleCreateRequest.
 type WorkflowScheduleCreateRequest struct {
 	Cron      string                  `json:"cron"`
@@ -2410,6 +2558,118 @@ type AgentStopParams struct {
 type GetScriptParams struct {
 	// AsWorkflow Whether to return code as standalone workflow or just relevant instructions
 	AsWorkflow          bool    `form:"as_workflow" json:"as_workflow"`
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// ListFunctionsParams defines parameters for ListFunctions.
+type ListFunctionsParams struct {
+	// Page Page number
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize Number of items per page
+	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty"`
+
+	// OnlyActive Whether to only return active sessions
+	OnlyActive *bool `form:"only_active,omitempty" json:"only_active,omitempty"`
+
+	// OnlyCurrentToken Whether to only return sessions for the current token (apikey)
+	OnlyCurrentToken    *bool   `form:"only_current_token,omitempty" json:"only_current_token,omitempty"`
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionCreateParams defines parameters for FunctionCreate.
+type FunctionCreateParams struct {
+	// Restricted Whether to restrict the workflow code
+	Restricted          *bool   `form:"restricted,omitempty" json:"restricted,omitempty"`
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionDeleteParams defines parameters for FunctionDelete.
+type FunctionDeleteParams struct {
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionDownloadUrlParams defines parameters for FunctionDownloadUrl.
+type FunctionDownloadUrlParams struct {
+	Version *string `form:"version,omitempty" json:"version,omitempty"`
+
+	// DecryptionKey The decryption key for the function
+	DecryptionKey       *string `form:"decryption_key,omitempty" json:"decryption_key,omitempty"`
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionUpdateParams defines parameters for FunctionUpdate.
+type FunctionUpdateParams struct {
+	// Version The version of the function to upload
+	Version *string `form:"version,omitempty" json:"version,omitempty"`
+
+	// Restricted Whether to restrict the function code
+	Restricted          *bool   `form:"restricted,omitempty" json:"restricted,omitempty"`
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionForkParams defines parameters for FunctionFork.
+type FunctionForkParams struct {
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// ListFunctionRunsByFunctionIdParams defines parameters for ListFunctionRunsByFunctionId.
+type ListFunctionRunsByFunctionIdParams struct {
+	// Page Page number
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize Number of items per page
+	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty"`
+
+	// OnlyActive Whether to only return active sessions
+	OnlyActive *bool `form:"only_active,omitempty" json:"only_active,omitempty"`
+
+	// OnlyCurrentToken Whether to only return sessions for the current token (apikey)
+	OnlyCurrentToken    *bool   `form:"only_current_token,omitempty" json:"only_current_token,omitempty"`
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionRunStartParams defines parameters for FunctionRunStart.
+type FunctionRunStartParams struct {
+	XNotteApiKey        string  `json:"x-notte-api-key"`
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionRunStopParams defines parameters for FunctionRunStop.
+type FunctionRunStopParams struct {
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionRunGetMetadataParams defines parameters for FunctionRunGetMetadata.
+type FunctionRunGetMetadataParams struct {
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionRunUpdateMetadataParams defines parameters for FunctionRunUpdateMetadata.
+type FunctionRunUpdateMetadataParams struct {
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionScheduleDeleteParams defines parameters for FunctionScheduleDelete.
+type FunctionScheduleDeleteParams struct {
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// FunctionScheduleSetParams defines parameters for FunctionScheduleSet.
+type FunctionScheduleSetParams struct {
 	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
 	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
 }
@@ -2485,6 +2745,38 @@ type PersonaDeleteNumberParams struct {
 
 // PersonaCreateNumberParams defines parameters for PersonaCreateNumber.
 type PersonaCreateNumberParams struct {
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// ProfileListParams defines parameters for ProfileList.
+type ProfileListParams struct {
+	// Page Page number
+	Page *int `form:"page,omitempty" json:"page,omitempty"`
+
+	// PageSize Number of items per page
+	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty"`
+
+	// Name Filter profiles by name
+	Name                *string `form:"name,omitempty" json:"name,omitempty"`
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// ProfileCreateParams defines parameters for ProfileCreate.
+type ProfileCreateParams struct {
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// ProfileDeleteParams defines parameters for ProfileDelete.
+type ProfileDeleteParams struct {
+	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
+	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
+}
+
+// ProfileGetParams defines parameters for ProfileGet.
+type ProfileGetParams struct {
 	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
 	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
 }
@@ -2747,123 +3039,26 @@ type VaultCredentialsAddParams struct {
 	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
 }
 
-// ListWorkflowsParams defines parameters for ListWorkflows.
-type ListWorkflowsParams struct {
-	// Page Page number
-	Page *int `form:"page,omitempty" json:"page,omitempty"`
-
-	// PageSize Number of items per page
-	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty"`
-
-	// OnlyActive Whether to only return active sessions
-	OnlyActive *bool `form:"only_active,omitempty" json:"only_active,omitempty"`
-
-	// OnlyCurrentToken Whether to only return sessions for the current token (apikey)
-	OnlyCurrentToken    *bool   `form:"only_current_token,omitempty" json:"only_current_token,omitempty"`
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowCreateParams defines parameters for WorkflowCreate.
-type WorkflowCreateParams struct {
-	// Restricted Whether to restrict the workflow code
-	Restricted          *bool   `form:"restricted,omitempty" json:"restricted,omitempty"`
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowDeleteParams defines parameters for WorkflowDelete.
-type WorkflowDeleteParams struct {
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowDownloadUrlParams defines parameters for WorkflowDownloadUrl.
-type WorkflowDownloadUrlParams struct {
-	Version *string `form:"version,omitempty" json:"version,omitempty"`
-
-	// DecryptionKey The decryption key for the workflow
-	DecryptionKey       *string `form:"decryption_key,omitempty" json:"decryption_key,omitempty"`
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowUpdateParams defines parameters for WorkflowUpdate.
-type WorkflowUpdateParams struct {
-	// Version The version of the workflow to upload
-	Version *string `form:"version,omitempty" json:"version,omitempty"`
-
-	// Restricted Whether to restrict the workflow code
-	Restricted          *bool   `form:"restricted,omitempty" json:"restricted,omitempty"`
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowForkParams defines parameters for WorkflowFork.
-type WorkflowForkParams struct {
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// ListWorkflowRunsByWorkflowIdParams defines parameters for ListWorkflowRunsByWorkflowId.
-type ListWorkflowRunsByWorkflowIdParams struct {
-	// Page Page number
-	Page *int `form:"page,omitempty" json:"page,omitempty"`
-
-	// PageSize Number of items per page
-	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty"`
-
-	// OnlyActive Whether to only return active sessions
-	OnlyActive *bool `form:"only_active,omitempty" json:"only_active,omitempty"`
-
-	// OnlyCurrentToken Whether to only return sessions for the current token (apikey)
-	OnlyCurrentToken    *bool   `form:"only_current_token,omitempty" json:"only_current_token,omitempty"`
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowRunStartParams defines parameters for WorkflowRunStart.
-type WorkflowRunStartParams struct {
-	XNotteApiKey        string  `json:"x-notte-api-key"`
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowRunStopParams defines parameters for WorkflowRunStop.
-type WorkflowRunStopParams struct {
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowRunGetMetadataParams defines parameters for WorkflowRunGetMetadata.
-type WorkflowRunGetMetadataParams struct {
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowRunUpdateMetadataParams defines parameters for WorkflowRunUpdateMetadata.
-type WorkflowRunUpdateMetadataParams struct {
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowScheduleDeleteParams defines parameters for WorkflowScheduleDelete.
-type WorkflowScheduleDeleteParams struct {
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
-// WorkflowScheduleSetParams defines parameters for WorkflowScheduleSet.
-type WorkflowScheduleSetParams struct {
-	XNotteRequestOrigin *string `json:"x-notte-request-origin,omitempty"`
-	XNotteSdkVersion    *string `json:"x-notte-sdk-version,omitempty"`
-}
-
 // AgentStartJSONRequestBody defines body for AgentStart for application/json ContentType.
 type AgentStartJSONRequestBody = ApiAgentStartRequest
 
+// FunctionCreateMultipartRequestBody defines body for FunctionCreate for multipart/form-data ContentType.
+type FunctionCreateMultipartRequestBody = BodyFunctionCreateFunctionsPost
+
+// FunctionUpdateMultipartRequestBody defines body for FunctionUpdate for multipart/form-data ContentType.
+type FunctionUpdateMultipartRequestBody = BodyFunctionUpdateFunctionsFunctionIdPost
+
+// FunctionRunUpdateMetadataJSONRequestBody defines body for FunctionRunUpdateMetadata for application/json ContentType.
+type FunctionRunUpdateMetadataJSONRequestBody = FunctionRunUpdateRequest
+
+// FunctionScheduleSetJSONRequestBody defines body for FunctionScheduleSet for application/json ContentType.
+type FunctionScheduleSetJSONRequestBody = WorkflowScheduleCreateRequest
+
 // PersonaCreateJSONRequestBody defines body for PersonaCreate for application/json ContentType.
 type PersonaCreateJSONRequestBody = PersonaCreateRequest
+
+// ProfileCreateJSONRequestBody defines body for ProfileCreate for application/json ContentType.
+type ProfileCreateJSONRequestBody = ProfileCreateRequest
 
 // ImprovePromptJSONRequestBody defines body for ImprovePrompt for application/json ContentType.
 type ImprovePromptJSONRequestBody = ImprovePromptRequest
@@ -2909,18 +3104,6 @@ type VaultCreditCardSetJSONRequestBody = AddCreditCardRequest
 
 // VaultCredentialsAddJSONRequestBody defines body for VaultCredentialsAdd for application/json ContentType.
 type VaultCredentialsAddJSONRequestBody = AddCredentialsRequest
-
-// WorkflowCreateMultipartRequestBody defines body for WorkflowCreate for multipart/form-data ContentType.
-type WorkflowCreateMultipartRequestBody = BodyWorkflowCreateWorkflowsPost
-
-// WorkflowUpdateMultipartRequestBody defines body for WorkflowUpdate for multipart/form-data ContentType.
-type WorkflowUpdateMultipartRequestBody = BodyWorkflowUpdateWorkflowsWorkflowIdPost
-
-// WorkflowRunUpdateMetadataJSONRequestBody defines body for WorkflowRunUpdateMetadata for application/json ContentType.
-type WorkflowRunUpdateMetadataJSONRequestBody = WorkflowRunUpdateRequest
-
-// WorkflowScheduleSetJSONRequestBody defines body for WorkflowScheduleSet for application/json ContentType.
-type WorkflowScheduleSetJSONRequestBody = WorkflowScheduleCreateRequest
 
 // AsFormFillAction returns the union data inside the ActionSpace_Actions_Item as a FormFillAction
 func (t ActionSpace_Actions_Item) AsFormFillAction() (FormFillAction, error) {
@@ -7797,6 +7980,49 @@ type ClientInterface interface {
 	// GetScript request
 	GetScript(ctx context.Context, agentId string, params *GetScriptParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListFunctions request
+	ListFunctions(ctx context.Context, params *ListFunctionsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionCreateWithBody request with any body
+	FunctionCreateWithBody(ctx context.Context, params *FunctionCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionDelete request
+	FunctionDelete(ctx context.Context, functionId string, params *FunctionDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionDownloadUrl request
+	FunctionDownloadUrl(ctx context.Context, functionId string, params *FunctionDownloadUrlParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionUpdateWithBody request with any body
+	FunctionUpdateWithBody(ctx context.Context, functionId string, params *FunctionUpdateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionFork request
+	FunctionFork(ctx context.Context, functionId string, params *FunctionForkParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListFunctionRunsByFunctionId request
+	ListFunctionRunsByFunctionId(ctx context.Context, functionId string, params *ListFunctionRunsByFunctionIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionRunStart request
+	FunctionRunStart(ctx context.Context, functionId string, params *FunctionRunStartParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionRunStop request
+	FunctionRunStop(ctx context.Context, functionId string, runId string, params *FunctionRunStopParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionRunGetMetadata request
+	FunctionRunGetMetadata(ctx context.Context, functionId string, runId string, params *FunctionRunGetMetadataParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionRunUpdateMetadataWithBody request with any body
+	FunctionRunUpdateMetadataWithBody(ctx context.Context, functionId string, runId string, params *FunctionRunUpdateMetadataParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	FunctionRunUpdateMetadata(ctx context.Context, functionId string, runId string, params *FunctionRunUpdateMetadataParams, body FunctionRunUpdateMetadataJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionScheduleDelete request
+	FunctionScheduleDelete(ctx context.Context, functionId string, params *FunctionScheduleDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FunctionScheduleSetWithBody request with any body
+	FunctionScheduleSetWithBody(ctx context.Context, functionId string, params *FunctionScheduleSetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	FunctionScheduleSet(ctx context.Context, functionId string, params *FunctionScheduleSetParams, body FunctionScheduleSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// HealthCheck request
 	HealthCheck(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -7825,6 +8051,20 @@ type ClientInterface interface {
 
 	// PersonaCreateNumber request
 	PersonaCreateNumber(ctx context.Context, personaId string, params *PersonaCreateNumberParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ProfileList request
+	ProfileList(ctx context.Context, params *ProfileListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ProfileCreateWithBody request with any body
+	ProfileCreateWithBody(ctx context.Context, params *ProfileCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ProfileCreate(ctx context.Context, params *ProfileCreateParams, body ProfileCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ProfileDelete request
+	ProfileDelete(ctx context.Context, profileId string, params *ProfileDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ProfileGet request
+	ProfileGet(ctx context.Context, profileId string, params *ProfileGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ImprovePromptWithBody request with any body
 	ImprovePromptWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -7959,49 +8199,6 @@ type ClientInterface interface {
 	VaultCredentialsAddWithBody(ctx context.Context, vaultId string, params *VaultCredentialsAddParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	VaultCredentialsAdd(ctx context.Context, vaultId string, params *VaultCredentialsAddParams, body VaultCredentialsAddJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// ListWorkflows request
-	ListWorkflows(ctx context.Context, params *ListWorkflowsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowCreateWithBody request with any body
-	WorkflowCreateWithBody(ctx context.Context, params *WorkflowCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowDelete request
-	WorkflowDelete(ctx context.Context, workflowId string, params *WorkflowDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowDownloadUrl request
-	WorkflowDownloadUrl(ctx context.Context, workflowId string, params *WorkflowDownloadUrlParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowUpdateWithBody request with any body
-	WorkflowUpdateWithBody(ctx context.Context, workflowId string, params *WorkflowUpdateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowFork request
-	WorkflowFork(ctx context.Context, workflowId string, params *WorkflowForkParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// ListWorkflowRunsByWorkflowId request
-	ListWorkflowRunsByWorkflowId(ctx context.Context, workflowId string, params *ListWorkflowRunsByWorkflowIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowRunStart request
-	WorkflowRunStart(ctx context.Context, workflowId string, params *WorkflowRunStartParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowRunStop request
-	WorkflowRunStop(ctx context.Context, workflowId string, runId string, params *WorkflowRunStopParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowRunGetMetadata request
-	WorkflowRunGetMetadata(ctx context.Context, workflowId string, runId string, params *WorkflowRunGetMetadataParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowRunUpdateMetadataWithBody request with any body
-	WorkflowRunUpdateMetadataWithBody(ctx context.Context, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	WorkflowRunUpdateMetadata(ctx context.Context, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, body WorkflowRunUpdateMetadataJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowScheduleDelete request
-	WorkflowScheduleDelete(ctx context.Context, workflowId string, params *WorkflowScheduleDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// WorkflowScheduleSetWithBody request with any body
-	WorkflowScheduleSetWithBody(ctx context.Context, workflowId string, params *WorkflowScheduleSetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	WorkflowScheduleSet(ctx context.Context, workflowId string, params *WorkflowScheduleSetParams, body WorkflowScheduleSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) ListAgents(ctx context.Context, params *ListAgentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -8078,6 +8275,186 @@ func (c *Client) AgentStop(ctx context.Context, agentId string, params *AgentSto
 
 func (c *Client) GetScript(ctx context.Context, agentId string, params *GetScriptParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetScriptRequest(c.Server, agentId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListFunctions(ctx context.Context, params *ListFunctionsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListFunctionsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionCreateWithBody(ctx context.Context, params *FunctionCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionCreateRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionDelete(ctx context.Context, functionId string, params *FunctionDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionDeleteRequest(c.Server, functionId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionDownloadUrl(ctx context.Context, functionId string, params *FunctionDownloadUrlParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionDownloadUrlRequest(c.Server, functionId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionUpdateWithBody(ctx context.Context, functionId string, params *FunctionUpdateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionUpdateRequestWithBody(c.Server, functionId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionFork(ctx context.Context, functionId string, params *FunctionForkParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionForkRequest(c.Server, functionId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListFunctionRunsByFunctionId(ctx context.Context, functionId string, params *ListFunctionRunsByFunctionIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListFunctionRunsByFunctionIdRequest(c.Server, functionId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionRunStart(ctx context.Context, functionId string, params *FunctionRunStartParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionRunStartRequest(c.Server, functionId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionRunStop(ctx context.Context, functionId string, runId string, params *FunctionRunStopParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionRunStopRequest(c.Server, functionId, runId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionRunGetMetadata(ctx context.Context, functionId string, runId string, params *FunctionRunGetMetadataParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionRunGetMetadataRequest(c.Server, functionId, runId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionRunUpdateMetadataWithBody(ctx context.Context, functionId string, runId string, params *FunctionRunUpdateMetadataParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionRunUpdateMetadataRequestWithBody(c.Server, functionId, runId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionRunUpdateMetadata(ctx context.Context, functionId string, runId string, params *FunctionRunUpdateMetadataParams, body FunctionRunUpdateMetadataJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionRunUpdateMetadataRequest(c.Server, functionId, runId, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionScheduleDelete(ctx context.Context, functionId string, params *FunctionScheduleDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionScheduleDeleteRequest(c.Server, functionId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionScheduleSetWithBody(ctx context.Context, functionId string, params *FunctionScheduleSetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionScheduleSetRequestWithBody(c.Server, functionId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) FunctionScheduleSet(ctx context.Context, functionId string, params *FunctionScheduleSetParams, body FunctionScheduleSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFunctionScheduleSetRequest(c.Server, functionId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -8198,6 +8575,66 @@ func (c *Client) PersonaDeleteNumber(ctx context.Context, personaId string, para
 
 func (c *Client) PersonaCreateNumber(ctx context.Context, personaId string, params *PersonaCreateNumberParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPersonaCreateNumberRequest(c.Server, personaId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ProfileList(ctx context.Context, params *ProfileListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProfileListRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ProfileCreateWithBody(ctx context.Context, params *ProfileCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProfileCreateRequestWithBody(c.Server, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ProfileCreate(ctx context.Context, params *ProfileCreateParams, body ProfileCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProfileCreateRequest(c.Server, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ProfileDelete(ctx context.Context, profileId string, params *ProfileDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProfileDeleteRequest(c.Server, profileId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ProfileGet(ctx context.Context, profileId string, params *ProfileGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProfileGetRequest(c.Server, profileId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -8796,186 +9233,6 @@ func (c *Client) VaultCredentialsAdd(ctx context.Context, vaultId string, params
 	return c.Client.Do(req)
 }
 
-func (c *Client) ListWorkflows(ctx context.Context, params *ListWorkflowsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewListWorkflowsRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowCreateWithBody(ctx context.Context, params *WorkflowCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowCreateRequestWithBody(c.Server, params, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowDelete(ctx context.Context, workflowId string, params *WorkflowDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowDeleteRequest(c.Server, workflowId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowDownloadUrl(ctx context.Context, workflowId string, params *WorkflowDownloadUrlParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowDownloadUrlRequest(c.Server, workflowId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowUpdateWithBody(ctx context.Context, workflowId string, params *WorkflowUpdateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowUpdateRequestWithBody(c.Server, workflowId, params, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowFork(ctx context.Context, workflowId string, params *WorkflowForkParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowForkRequest(c.Server, workflowId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) ListWorkflowRunsByWorkflowId(ctx context.Context, workflowId string, params *ListWorkflowRunsByWorkflowIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewListWorkflowRunsByWorkflowIdRequest(c.Server, workflowId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowRunStart(ctx context.Context, workflowId string, params *WorkflowRunStartParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowRunStartRequest(c.Server, workflowId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowRunStop(ctx context.Context, workflowId string, runId string, params *WorkflowRunStopParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowRunStopRequest(c.Server, workflowId, runId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowRunGetMetadata(ctx context.Context, workflowId string, runId string, params *WorkflowRunGetMetadataParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowRunGetMetadataRequest(c.Server, workflowId, runId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowRunUpdateMetadataWithBody(ctx context.Context, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowRunUpdateMetadataRequestWithBody(c.Server, workflowId, runId, params, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowRunUpdateMetadata(ctx context.Context, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, body WorkflowRunUpdateMetadataJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowRunUpdateMetadataRequest(c.Server, workflowId, runId, params, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowScheduleDelete(ctx context.Context, workflowId string, params *WorkflowScheduleDeleteParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowScheduleDeleteRequest(c.Server, workflowId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowScheduleSetWithBody(ctx context.Context, workflowId string, params *WorkflowScheduleSetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowScheduleSetRequestWithBody(c.Server, workflowId, params, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) WorkflowScheduleSet(ctx context.Context, workflowId string, params *WorkflowScheduleSetParams, body WorkflowScheduleSetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewWorkflowScheduleSetRequest(c.Server, workflowId, params, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 // NewListAgentsRequest generates requests for ListAgents
 func NewListAgentsRequest(server string, params *ListAgentsParams) (*http.Request, error) {
 	var err error
@@ -9427,6 +9684,1070 @@ func NewGetScriptRequest(server string, agentId string, params *GetScriptParams)
 	if err != nil {
 		return nil, err
 	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewListFunctionsRequest generates requests for ListFunctions
+func NewListFunctionsRequest(server string, params *ListFunctionsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page_size", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OnlyActive != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "only_active", runtime.ParamLocationQuery, *params.OnlyActive); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OnlyCurrentToken != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "only_current_token", runtime.ParamLocationQuery, *params.OnlyCurrentToken); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionCreateRequestWithBody generates requests for FunctionCreate with any type of body
+func NewFunctionCreateRequestWithBody(server string, params *FunctionCreateParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Restricted != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "restricted", runtime.ParamLocationQuery, *params.Restricted); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionDeleteRequest generates requests for FunctionDelete
+func NewFunctionDeleteRequest(server string, functionId string, params *FunctionDeleteParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionDownloadUrlRequest generates requests for FunctionDownloadUrl
+func NewFunctionDownloadUrlRequest(server string, functionId string, params *FunctionDownloadUrlParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Version != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "version", runtime.ParamLocationQuery, *params.Version); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.DecryptionKey != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "decryption_key", runtime.ParamLocationQuery, *params.DecryptionKey); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionUpdateRequestWithBody generates requests for FunctionUpdate with any type of body
+func NewFunctionUpdateRequestWithBody(server string, functionId string, params *FunctionUpdateParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Version != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "version", runtime.ParamLocationQuery, *params.Version); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Restricted != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "restricted", runtime.ParamLocationQuery, *params.Restricted); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionForkRequest generates requests for FunctionFork
+func NewFunctionForkRequest(server string, functionId string, params *FunctionForkParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s/fork", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewListFunctionRunsByFunctionIdRequest generates requests for ListFunctionRunsByFunctionId
+func NewListFunctionRunsByFunctionIdRequest(server string, functionId string, params *ListFunctionRunsByFunctionIdParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s/runs", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page_size", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OnlyActive != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "only_active", runtime.ParamLocationQuery, *params.OnlyActive); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.OnlyCurrentToken != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "only_current_token", runtime.ParamLocationQuery, *params.OnlyCurrentToken); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionRunStartRequest generates requests for FunctionRunStart
+func NewFunctionRunStartRequest(server string, functionId string, params *FunctionRunStartParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s/runs/start", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-api-key", runtime.ParamLocationHeader, params.XNotteApiKey)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("x-notte-api-key", headerParam0)
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam1)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam2 string
+
+			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam2)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionRunStopRequest generates requests for FunctionRunStop
+func NewFunctionRunStopRequest(server string, functionId string, runId string, params *FunctionRunStopParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "run_id", runtime.ParamLocationPath, runId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s/runs/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionRunGetMetadataRequest generates requests for FunctionRunGetMetadata
+func NewFunctionRunGetMetadataRequest(server string, functionId string, runId string, params *FunctionRunGetMetadataParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "run_id", runtime.ParamLocationPath, runId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s/runs/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionRunUpdateMetadataRequest calls the generic FunctionRunUpdateMetadata builder with application/json body
+func NewFunctionRunUpdateMetadataRequest(server string, functionId string, runId string, params *FunctionRunUpdateMetadataParams, body FunctionRunUpdateMetadataJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewFunctionRunUpdateMetadataRequestWithBody(server, functionId, runId, params, "application/json", bodyReader)
+}
+
+// NewFunctionRunUpdateMetadataRequestWithBody generates requests for FunctionRunUpdateMetadata with any type of body
+func NewFunctionRunUpdateMetadataRequestWithBody(server string, functionId string, runId string, params *FunctionRunUpdateMetadataParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "run_id", runtime.ParamLocationPath, runId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s/runs/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionScheduleDeleteRequest generates requests for FunctionScheduleDelete
+func NewFunctionScheduleDeleteRequest(server string, functionId string, params *FunctionScheduleDeleteParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s/schedule", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewFunctionScheduleSetRequest calls the generic FunctionScheduleSet builder with application/json body
+func NewFunctionScheduleSetRequest(server string, functionId string, params *FunctionScheduleSetParams, body FunctionScheduleSetJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewFunctionScheduleSetRequestWithBody(server, functionId, params, "application/json", bodyReader)
+}
+
+// NewFunctionScheduleSetRequestWithBody generates requests for FunctionScheduleSet with any type of body
+func NewFunctionScheduleSetRequestWithBody(server string, functionId string, params *FunctionScheduleSetParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "function_id", runtime.ParamLocationPath, functionId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/functions/%s/schedule", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	if params != nil {
 
@@ -10108,6 +11429,299 @@ func NewPersonaCreateNumberRequest(server string, personaId string, params *Pers
 	}
 
 	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewProfileListRequest generates requests for ProfileList
+func NewProfileListRequest(server string, params *ProfileListParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/profiles")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.Page != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page_size", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.Name != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "name", runtime.ParamLocationQuery, *params.Name); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewProfileCreateRequest calls the generic ProfileCreate builder with application/json body
+func NewProfileCreateRequest(server string, params *ProfileCreateParams, body ProfileCreateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewProfileCreateRequestWithBody(server, params, "application/json", bodyReader)
+}
+
+// NewProfileCreateRequestWithBody generates requests for ProfileCreate with any type of body
+func NewProfileCreateRequestWithBody(server string, params *ProfileCreateParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/profiles/create")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewProfileDeleteRequest generates requests for ProfileDelete
+func NewProfileDeleteRequest(server string, profileId string, params *ProfileDeleteParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "profile_id", runtime.ParamLocationPath, profileId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/profiles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.XNotteRequestOrigin != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-request-origin", headerParam0)
+		}
+
+		if params.XNotteSdkVersion != nil {
+			var headerParam1 string
+
+			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("x-notte-sdk-version", headerParam1)
+		}
+
+	}
+
+	return req, nil
+}
+
+// NewProfileGetRequest generates requests for ProfileGet
+func NewProfileGetRequest(server string, profileId string, params *ProfileGetParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "profile_id", runtime.ParamLocationPath, profileId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/profiles/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -12699,1070 +14313,6 @@ func NewVaultCredentialsAddRequestWithBody(server string, vaultId string, params
 	return req, nil
 }
 
-// NewListWorkflowsRequest generates requests for ListWorkflows
-func NewListWorkflowsRequest(server string, params *ListWorkflowsParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Page != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.PageSize != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page_size", runtime.ParamLocationQuery, *params.PageSize); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.OnlyActive != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "only_active", runtime.ParamLocationQuery, *params.OnlyActive); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.OnlyCurrentToken != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "only_current_token", runtime.ParamLocationQuery, *params.OnlyCurrentToken); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowCreateRequestWithBody generates requests for WorkflowCreate with any type of body
-func NewWorkflowCreateRequestWithBody(server string, params *WorkflowCreateParams, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Restricted != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "restricted", runtime.ParamLocationQuery, *params.Restricted); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowDeleteRequest generates requests for WorkflowDelete
-func NewWorkflowDeleteRequest(server string, workflowId string, params *WorkflowDeleteParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowDownloadUrlRequest generates requests for WorkflowDownloadUrl
-func NewWorkflowDownloadUrlRequest(server string, workflowId string, params *WorkflowDownloadUrlParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Version != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "version", runtime.ParamLocationQuery, *params.Version); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.DecryptionKey != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "decryption_key", runtime.ParamLocationQuery, *params.DecryptionKey); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowUpdateRequestWithBody generates requests for WorkflowUpdate with any type of body
-func NewWorkflowUpdateRequestWithBody(server string, workflowId string, params *WorkflowUpdateParams, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Version != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "version", runtime.ParamLocationQuery, *params.Version); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.Restricted != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "restricted", runtime.ParamLocationQuery, *params.Restricted); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowForkRequest generates requests for WorkflowFork
-func NewWorkflowForkRequest(server string, workflowId string, params *WorkflowForkParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s/fork", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewListWorkflowRunsByWorkflowIdRequest generates requests for ListWorkflowRunsByWorkflowId
-func NewListWorkflowRunsByWorkflowIdRequest(server string, workflowId string, params *ListWorkflowRunsByWorkflowIdParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s/runs", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Page != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.PageSize != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page_size", runtime.ParamLocationQuery, *params.PageSize); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.OnlyActive != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "only_active", runtime.ParamLocationQuery, *params.OnlyActive); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.OnlyCurrentToken != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "only_current_token", runtime.ParamLocationQuery, *params.OnlyCurrentToken); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowRunStartRequest generates requests for WorkflowRunStart
-func NewWorkflowRunStartRequest(server string, workflowId string, params *WorkflowRunStartParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s/runs/start", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		var headerParam0 string
-
-		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-api-key", runtime.ParamLocationHeader, params.XNotteApiKey)
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("x-notte-api-key", headerParam0)
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam1)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam2 string
-
-			headerParam2, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam2)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowRunStopRequest generates requests for WorkflowRunStop
-func NewWorkflowRunStopRequest(server string, workflowId string, runId string, params *WorkflowRunStopParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "run_id", runtime.ParamLocationPath, runId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s/runs/%s", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowRunGetMetadataRequest generates requests for WorkflowRunGetMetadata
-func NewWorkflowRunGetMetadataRequest(server string, workflowId string, runId string, params *WorkflowRunGetMetadataParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "run_id", runtime.ParamLocationPath, runId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s/runs/%s", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowRunUpdateMetadataRequest calls the generic WorkflowRunUpdateMetadata builder with application/json body
-func NewWorkflowRunUpdateMetadataRequest(server string, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, body WorkflowRunUpdateMetadataJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewWorkflowRunUpdateMetadataRequestWithBody(server, workflowId, runId, params, "application/json", bodyReader)
-}
-
-// NewWorkflowRunUpdateMetadataRequestWithBody generates requests for WorkflowRunUpdateMetadata with any type of body
-func NewWorkflowRunUpdateMetadataRequestWithBody(server string, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	var pathParam1 string
-
-	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "run_id", runtime.ParamLocationPath, runId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s/runs/%s", pathParam0, pathParam1)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("PATCH", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowScheduleDeleteRequest generates requests for WorkflowScheduleDelete
-func NewWorkflowScheduleDeleteRequest(server string, workflowId string, params *WorkflowScheduleDeleteParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s/schedule", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
-// NewWorkflowScheduleSetRequest calls the generic WorkflowScheduleSet builder with application/json body
-func NewWorkflowScheduleSetRequest(server string, workflowId string, params *WorkflowScheduleSetParams, body WorkflowScheduleSetJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewWorkflowScheduleSetRequestWithBody(server, workflowId, params, "application/json", bodyReader)
-}
-
-// NewWorkflowScheduleSetRequestWithBody generates requests for WorkflowScheduleSet with any type of body
-func NewWorkflowScheduleSetRequestWithBody(server string, workflowId string, params *WorkflowScheduleSetParams, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "workflow_id", runtime.ParamLocationPath, workflowId)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/workflows/%s/schedule", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	if params != nil {
-
-		if params.XNotteRequestOrigin != nil {
-			var headerParam0 string
-
-			headerParam0, err = runtime.StyleParamWithLocation("simple", false, "x-notte-request-origin", runtime.ParamLocationHeader, *params.XNotteRequestOrigin)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-request-origin", headerParam0)
-		}
-
-		if params.XNotteSdkVersion != nil {
-			var headerParam1 string
-
-			headerParam1, err = runtime.StyleParamWithLocation("simple", false, "x-notte-sdk-version", runtime.ParamLocationHeader, *params.XNotteSdkVersion)
-			if err != nil {
-				return nil, err
-			}
-
-			req.Header.Set("x-notte-sdk-version", headerParam1)
-		}
-
-	}
-
-	return req, nil
-}
-
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -13826,6 +14376,49 @@ type ClientWithResponsesInterface interface {
 	// GetScriptWithResponse request
 	GetScriptWithResponse(ctx context.Context, agentId string, params *GetScriptParams, reqEditors ...RequestEditorFn) (*GetScriptResult, error)
 
+	// ListFunctionsWithResponse request
+	ListFunctionsWithResponse(ctx context.Context, params *ListFunctionsParams, reqEditors ...RequestEditorFn) (*ListFunctionsResult, error)
+
+	// FunctionCreateWithBodyWithResponse request with any body
+	FunctionCreateWithBodyWithResponse(ctx context.Context, params *FunctionCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FunctionCreateResult, error)
+
+	// FunctionDeleteWithResponse request
+	FunctionDeleteWithResponse(ctx context.Context, functionId string, params *FunctionDeleteParams, reqEditors ...RequestEditorFn) (*FunctionDeleteResult, error)
+
+	// FunctionDownloadUrlWithResponse request
+	FunctionDownloadUrlWithResponse(ctx context.Context, functionId string, params *FunctionDownloadUrlParams, reqEditors ...RequestEditorFn) (*FunctionDownloadUrlResult, error)
+
+	// FunctionUpdateWithBodyWithResponse request with any body
+	FunctionUpdateWithBodyWithResponse(ctx context.Context, functionId string, params *FunctionUpdateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FunctionUpdateResult, error)
+
+	// FunctionForkWithResponse request
+	FunctionForkWithResponse(ctx context.Context, functionId string, params *FunctionForkParams, reqEditors ...RequestEditorFn) (*FunctionForkResult, error)
+
+	// ListFunctionRunsByFunctionIdWithResponse request
+	ListFunctionRunsByFunctionIdWithResponse(ctx context.Context, functionId string, params *ListFunctionRunsByFunctionIdParams, reqEditors ...RequestEditorFn) (*ListFunctionRunsByFunctionIdResult, error)
+
+	// FunctionRunStartWithResponse request
+	FunctionRunStartWithResponse(ctx context.Context, functionId string, params *FunctionRunStartParams, reqEditors ...RequestEditorFn) (*FunctionRunStartResult, error)
+
+	// FunctionRunStopWithResponse request
+	FunctionRunStopWithResponse(ctx context.Context, functionId string, runId string, params *FunctionRunStopParams, reqEditors ...RequestEditorFn) (*FunctionRunStopResult, error)
+
+	// FunctionRunGetMetadataWithResponse request
+	FunctionRunGetMetadataWithResponse(ctx context.Context, functionId string, runId string, params *FunctionRunGetMetadataParams, reqEditors ...RequestEditorFn) (*FunctionRunGetMetadataResult, error)
+
+	// FunctionRunUpdateMetadataWithBodyWithResponse request with any body
+	FunctionRunUpdateMetadataWithBodyWithResponse(ctx context.Context, functionId string, runId string, params *FunctionRunUpdateMetadataParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FunctionRunUpdateMetadataResult, error)
+
+	FunctionRunUpdateMetadataWithResponse(ctx context.Context, functionId string, runId string, params *FunctionRunUpdateMetadataParams, body FunctionRunUpdateMetadataJSONRequestBody, reqEditors ...RequestEditorFn) (*FunctionRunUpdateMetadataResult, error)
+
+	// FunctionScheduleDeleteWithResponse request
+	FunctionScheduleDeleteWithResponse(ctx context.Context, functionId string, params *FunctionScheduleDeleteParams, reqEditors ...RequestEditorFn) (*FunctionScheduleDeleteResult, error)
+
+	// FunctionScheduleSetWithBodyWithResponse request with any body
+	FunctionScheduleSetWithBodyWithResponse(ctx context.Context, functionId string, params *FunctionScheduleSetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FunctionScheduleSetResult, error)
+
+	FunctionScheduleSetWithResponse(ctx context.Context, functionId string, params *FunctionScheduleSetParams, body FunctionScheduleSetJSONRequestBody, reqEditors ...RequestEditorFn) (*FunctionScheduleSetResult, error)
+
 	// HealthCheckWithResponse request
 	HealthCheckWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*HealthCheckResult, error)
 
@@ -13854,6 +14447,20 @@ type ClientWithResponsesInterface interface {
 
 	// PersonaCreateNumberWithResponse request
 	PersonaCreateNumberWithResponse(ctx context.Context, personaId string, params *PersonaCreateNumberParams, reqEditors ...RequestEditorFn) (*PersonaCreateNumberResult, error)
+
+	// ProfileListWithResponse request
+	ProfileListWithResponse(ctx context.Context, params *ProfileListParams, reqEditors ...RequestEditorFn) (*ProfileListResult, error)
+
+	// ProfileCreateWithBodyWithResponse request with any body
+	ProfileCreateWithBodyWithResponse(ctx context.Context, params *ProfileCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ProfileCreateResult, error)
+
+	ProfileCreateWithResponse(ctx context.Context, params *ProfileCreateParams, body ProfileCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*ProfileCreateResult, error)
+
+	// ProfileDeleteWithResponse request
+	ProfileDeleteWithResponse(ctx context.Context, profileId string, params *ProfileDeleteParams, reqEditors ...RequestEditorFn) (*ProfileDeleteResult, error)
+
+	// ProfileGetWithResponse request
+	ProfileGetWithResponse(ctx context.Context, profileId string, params *ProfileGetParams, reqEditors ...RequestEditorFn) (*ProfileGetResult, error)
 
 	// ImprovePromptWithBodyWithResponse request with any body
 	ImprovePromptWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImprovePromptResult, error)
@@ -13988,49 +14595,6 @@ type ClientWithResponsesInterface interface {
 	VaultCredentialsAddWithBodyWithResponse(ctx context.Context, vaultId string, params *VaultCredentialsAddParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*VaultCredentialsAddResult, error)
 
 	VaultCredentialsAddWithResponse(ctx context.Context, vaultId string, params *VaultCredentialsAddParams, body VaultCredentialsAddJSONRequestBody, reqEditors ...RequestEditorFn) (*VaultCredentialsAddResult, error)
-
-	// ListWorkflowsWithResponse request
-	ListWorkflowsWithResponse(ctx context.Context, params *ListWorkflowsParams, reqEditors ...RequestEditorFn) (*ListWorkflowsResult, error)
-
-	// WorkflowCreateWithBodyWithResponse request with any body
-	WorkflowCreateWithBodyWithResponse(ctx context.Context, params *WorkflowCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WorkflowCreateResult, error)
-
-	// WorkflowDeleteWithResponse request
-	WorkflowDeleteWithResponse(ctx context.Context, workflowId string, params *WorkflowDeleteParams, reqEditors ...RequestEditorFn) (*WorkflowDeleteResult, error)
-
-	// WorkflowDownloadUrlWithResponse request
-	WorkflowDownloadUrlWithResponse(ctx context.Context, workflowId string, params *WorkflowDownloadUrlParams, reqEditors ...RequestEditorFn) (*WorkflowDownloadUrlResult, error)
-
-	// WorkflowUpdateWithBodyWithResponse request with any body
-	WorkflowUpdateWithBodyWithResponse(ctx context.Context, workflowId string, params *WorkflowUpdateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WorkflowUpdateResult, error)
-
-	// WorkflowForkWithResponse request
-	WorkflowForkWithResponse(ctx context.Context, workflowId string, params *WorkflowForkParams, reqEditors ...RequestEditorFn) (*WorkflowForkResult, error)
-
-	// ListWorkflowRunsByWorkflowIdWithResponse request
-	ListWorkflowRunsByWorkflowIdWithResponse(ctx context.Context, workflowId string, params *ListWorkflowRunsByWorkflowIdParams, reqEditors ...RequestEditorFn) (*ListWorkflowRunsByWorkflowIdResult, error)
-
-	// WorkflowRunStartWithResponse request
-	WorkflowRunStartWithResponse(ctx context.Context, workflowId string, params *WorkflowRunStartParams, reqEditors ...RequestEditorFn) (*WorkflowRunStartResult, error)
-
-	// WorkflowRunStopWithResponse request
-	WorkflowRunStopWithResponse(ctx context.Context, workflowId string, runId string, params *WorkflowRunStopParams, reqEditors ...RequestEditorFn) (*WorkflowRunStopResult, error)
-
-	// WorkflowRunGetMetadataWithResponse request
-	WorkflowRunGetMetadataWithResponse(ctx context.Context, workflowId string, runId string, params *WorkflowRunGetMetadataParams, reqEditors ...RequestEditorFn) (*WorkflowRunGetMetadataResult, error)
-
-	// WorkflowRunUpdateMetadataWithBodyWithResponse request with any body
-	WorkflowRunUpdateMetadataWithBodyWithResponse(ctx context.Context, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WorkflowRunUpdateMetadataResult, error)
-
-	WorkflowRunUpdateMetadataWithResponse(ctx context.Context, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, body WorkflowRunUpdateMetadataJSONRequestBody, reqEditors ...RequestEditorFn) (*WorkflowRunUpdateMetadataResult, error)
-
-	// WorkflowScheduleDeleteWithResponse request
-	WorkflowScheduleDeleteWithResponse(ctx context.Context, workflowId string, params *WorkflowScheduleDeleteParams, reqEditors ...RequestEditorFn) (*WorkflowScheduleDeleteResult, error)
-
-	// WorkflowScheduleSetWithBodyWithResponse request with any body
-	WorkflowScheduleSetWithBodyWithResponse(ctx context.Context, workflowId string, params *WorkflowScheduleSetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WorkflowScheduleSetResult, error)
-
-	WorkflowScheduleSetWithResponse(ctx context.Context, workflowId string, params *WorkflowScheduleSetParams, body WorkflowScheduleSetJSONRequestBody, reqEditors ...RequestEditorFn) (*WorkflowScheduleSetResult, error)
 }
 
 type ListAgentsResult struct {
@@ -14150,7 +14714,7 @@ func (r AgentStopResult) StatusCode() int {
 type GetScriptResult struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *AgentWorkflowCodeResponse
+	JSON200      *AgentFunctionCodeResponse
 	JSON422      *HTTPValidationError
 }
 
@@ -14164,6 +14728,305 @@ func (r GetScriptResult) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetScriptResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListFunctionsResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResponseGetFunctionResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListFunctionsResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListFunctionsResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionCreateResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetFunctionResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionCreateResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionCreateResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionDeleteResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *DeleteFunctionResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionDeleteResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionDeleteResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionDownloadUrlResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetFunctionWithLinkResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionDownloadUrlResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionDownloadUrlResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionUpdateResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetFunctionResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionUpdateResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionUpdateResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionForkResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetFunctionResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionForkResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionForkResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListFunctionRunsByFunctionIdResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResponseGetFunctionRunResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ListFunctionRunsByFunctionIdResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListFunctionRunsByFunctionIdResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionRunStartResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *interface{}
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionRunStartResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionRunStartResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionRunStopResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UpdateFunctionRunResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionRunStopResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionRunStopResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionRunGetMetadataResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetFunctionRunResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionRunGetMetadataResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionRunGetMetadataResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionRunUpdateMetadataResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UpdateFunctionRunResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionRunUpdateMetadataResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionRunUpdateMetadataResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionScheduleDeleteResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ScheduleDeleteResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionScheduleDeleteResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionScheduleDeleteResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type FunctionScheduleSetResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ScheduleResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r FunctionScheduleSetResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FunctionScheduleSetResult) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14370,6 +15233,98 @@ func (r PersonaCreateNumberResult) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PersonaCreateNumberResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ProfileListResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedResponseProfileResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ProfileListResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ProfileListResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ProfileCreateResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ProfileResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ProfileCreateResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ProfileCreateResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ProfileDeleteResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ProfileDeleteResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ProfileDeleteResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ProfileDeleteResult) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ProfileGetResult struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ProfileResponse
+	JSON422      *HTTPValidationError
+}
+
+// Status returns HTTPResponse.Status
+func (r ProfileGetResult) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ProfileGetResult) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14769,7 +15724,7 @@ func (r SessionStopResult) StatusCode() int {
 type GetSessionScriptResult struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *AgentWorkflowCodeResponse
+	JSON200      *AgentFunctionCodeResponse
 	JSON422      *HTTPValidationError
 }
 
@@ -15205,305 +16160,6 @@ func (r VaultCredentialsAddResult) StatusCode() int {
 	return 0
 }
 
-type ListWorkflowsResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *PaginatedResponseGetWorkflowResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r ListWorkflowsResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListWorkflowsResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowCreateResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *GetWorkflowResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowCreateResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowCreateResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowDeleteResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *DeleteWorkflowResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowDeleteResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowDeleteResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowDownloadUrlResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *GetWorkflowWithLinkResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowDownloadUrlResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowDownloadUrlResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowUpdateResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *GetWorkflowResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowUpdateResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowUpdateResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowForkResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *GetWorkflowResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowForkResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowForkResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type ListWorkflowRunsByWorkflowIdResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *PaginatedResponseGetWorkflowRunResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r ListWorkflowRunsByWorkflowIdResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListWorkflowRunsByWorkflowIdResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowRunStartResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *interface{}
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowRunStartResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowRunStartResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowRunStopResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *UpdateWorkflowRunResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowRunStopResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowRunStopResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowRunGetMetadataResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *GetWorkflowRunResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowRunGetMetadataResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowRunGetMetadataResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowRunUpdateMetadataResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *UpdateWorkflowRunResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowRunUpdateMetadataResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowRunUpdateMetadataResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowScheduleDeleteResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ScheduleDeleteResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowScheduleDeleteResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowScheduleDeleteResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type WorkflowScheduleSetResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ScheduleResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r WorkflowScheduleSetResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r WorkflowScheduleSetResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 // ListAgentsWithResponse request returning *ListAgentsResult
 func (c *ClientWithResponses) ListAgentsWithResponse(ctx context.Context, params *ListAgentsParams, reqEditors ...RequestEditorFn) (*ListAgentsResult, error) {
 	rsp, err := c.ListAgents(ctx, params, reqEditors...)
@@ -15564,6 +16220,139 @@ func (c *ClientWithResponses) GetScriptWithResponse(ctx context.Context, agentId
 		return nil, err
 	}
 	return ParseGetScriptResult(rsp)
+}
+
+// ListFunctionsWithResponse request returning *ListFunctionsResult
+func (c *ClientWithResponses) ListFunctionsWithResponse(ctx context.Context, params *ListFunctionsParams, reqEditors ...RequestEditorFn) (*ListFunctionsResult, error) {
+	rsp, err := c.ListFunctions(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListFunctionsResult(rsp)
+}
+
+// FunctionCreateWithBodyWithResponse request with arbitrary body returning *FunctionCreateResult
+func (c *ClientWithResponses) FunctionCreateWithBodyWithResponse(ctx context.Context, params *FunctionCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FunctionCreateResult, error) {
+	rsp, err := c.FunctionCreateWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionCreateResult(rsp)
+}
+
+// FunctionDeleteWithResponse request returning *FunctionDeleteResult
+func (c *ClientWithResponses) FunctionDeleteWithResponse(ctx context.Context, functionId string, params *FunctionDeleteParams, reqEditors ...RequestEditorFn) (*FunctionDeleteResult, error) {
+	rsp, err := c.FunctionDelete(ctx, functionId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionDeleteResult(rsp)
+}
+
+// FunctionDownloadUrlWithResponse request returning *FunctionDownloadUrlResult
+func (c *ClientWithResponses) FunctionDownloadUrlWithResponse(ctx context.Context, functionId string, params *FunctionDownloadUrlParams, reqEditors ...RequestEditorFn) (*FunctionDownloadUrlResult, error) {
+	rsp, err := c.FunctionDownloadUrl(ctx, functionId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionDownloadUrlResult(rsp)
+}
+
+// FunctionUpdateWithBodyWithResponse request with arbitrary body returning *FunctionUpdateResult
+func (c *ClientWithResponses) FunctionUpdateWithBodyWithResponse(ctx context.Context, functionId string, params *FunctionUpdateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FunctionUpdateResult, error) {
+	rsp, err := c.FunctionUpdateWithBody(ctx, functionId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionUpdateResult(rsp)
+}
+
+// FunctionForkWithResponse request returning *FunctionForkResult
+func (c *ClientWithResponses) FunctionForkWithResponse(ctx context.Context, functionId string, params *FunctionForkParams, reqEditors ...RequestEditorFn) (*FunctionForkResult, error) {
+	rsp, err := c.FunctionFork(ctx, functionId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionForkResult(rsp)
+}
+
+// ListFunctionRunsByFunctionIdWithResponse request returning *ListFunctionRunsByFunctionIdResult
+func (c *ClientWithResponses) ListFunctionRunsByFunctionIdWithResponse(ctx context.Context, functionId string, params *ListFunctionRunsByFunctionIdParams, reqEditors ...RequestEditorFn) (*ListFunctionRunsByFunctionIdResult, error) {
+	rsp, err := c.ListFunctionRunsByFunctionId(ctx, functionId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListFunctionRunsByFunctionIdResult(rsp)
+}
+
+// FunctionRunStartWithResponse request returning *FunctionRunStartResult
+func (c *ClientWithResponses) FunctionRunStartWithResponse(ctx context.Context, functionId string, params *FunctionRunStartParams, reqEditors ...RequestEditorFn) (*FunctionRunStartResult, error) {
+	rsp, err := c.FunctionRunStart(ctx, functionId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionRunStartResult(rsp)
+}
+
+// FunctionRunStopWithResponse request returning *FunctionRunStopResult
+func (c *ClientWithResponses) FunctionRunStopWithResponse(ctx context.Context, functionId string, runId string, params *FunctionRunStopParams, reqEditors ...RequestEditorFn) (*FunctionRunStopResult, error) {
+	rsp, err := c.FunctionRunStop(ctx, functionId, runId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionRunStopResult(rsp)
+}
+
+// FunctionRunGetMetadataWithResponse request returning *FunctionRunGetMetadataResult
+func (c *ClientWithResponses) FunctionRunGetMetadataWithResponse(ctx context.Context, functionId string, runId string, params *FunctionRunGetMetadataParams, reqEditors ...RequestEditorFn) (*FunctionRunGetMetadataResult, error) {
+	rsp, err := c.FunctionRunGetMetadata(ctx, functionId, runId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionRunGetMetadataResult(rsp)
+}
+
+// FunctionRunUpdateMetadataWithBodyWithResponse request with arbitrary body returning *FunctionRunUpdateMetadataResult
+func (c *ClientWithResponses) FunctionRunUpdateMetadataWithBodyWithResponse(ctx context.Context, functionId string, runId string, params *FunctionRunUpdateMetadataParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FunctionRunUpdateMetadataResult, error) {
+	rsp, err := c.FunctionRunUpdateMetadataWithBody(ctx, functionId, runId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionRunUpdateMetadataResult(rsp)
+}
+
+func (c *ClientWithResponses) FunctionRunUpdateMetadataWithResponse(ctx context.Context, functionId string, runId string, params *FunctionRunUpdateMetadataParams, body FunctionRunUpdateMetadataJSONRequestBody, reqEditors ...RequestEditorFn) (*FunctionRunUpdateMetadataResult, error) {
+	rsp, err := c.FunctionRunUpdateMetadata(ctx, functionId, runId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionRunUpdateMetadataResult(rsp)
+}
+
+// FunctionScheduleDeleteWithResponse request returning *FunctionScheduleDeleteResult
+func (c *ClientWithResponses) FunctionScheduleDeleteWithResponse(ctx context.Context, functionId string, params *FunctionScheduleDeleteParams, reqEditors ...RequestEditorFn) (*FunctionScheduleDeleteResult, error) {
+	rsp, err := c.FunctionScheduleDelete(ctx, functionId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionScheduleDeleteResult(rsp)
+}
+
+// FunctionScheduleSetWithBodyWithResponse request with arbitrary body returning *FunctionScheduleSetResult
+func (c *ClientWithResponses) FunctionScheduleSetWithBodyWithResponse(ctx context.Context, functionId string, params *FunctionScheduleSetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*FunctionScheduleSetResult, error) {
+	rsp, err := c.FunctionScheduleSetWithBody(ctx, functionId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionScheduleSetResult(rsp)
+}
+
+func (c *ClientWithResponses) FunctionScheduleSetWithResponse(ctx context.Context, functionId string, params *FunctionScheduleSetParams, body FunctionScheduleSetJSONRequestBody, reqEditors ...RequestEditorFn) (*FunctionScheduleSetResult, error) {
+	rsp, err := c.FunctionScheduleSet(ctx, functionId, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFunctionScheduleSetResult(rsp)
 }
 
 // HealthCheckWithResponse request returning *HealthCheckResult
@@ -15653,6 +16442,50 @@ func (c *ClientWithResponses) PersonaCreateNumberWithResponse(ctx context.Contex
 		return nil, err
 	}
 	return ParsePersonaCreateNumberResult(rsp)
+}
+
+// ProfileListWithResponse request returning *ProfileListResult
+func (c *ClientWithResponses) ProfileListWithResponse(ctx context.Context, params *ProfileListParams, reqEditors ...RequestEditorFn) (*ProfileListResult, error) {
+	rsp, err := c.ProfileList(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseProfileListResult(rsp)
+}
+
+// ProfileCreateWithBodyWithResponse request with arbitrary body returning *ProfileCreateResult
+func (c *ClientWithResponses) ProfileCreateWithBodyWithResponse(ctx context.Context, params *ProfileCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ProfileCreateResult, error) {
+	rsp, err := c.ProfileCreateWithBody(ctx, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseProfileCreateResult(rsp)
+}
+
+func (c *ClientWithResponses) ProfileCreateWithResponse(ctx context.Context, params *ProfileCreateParams, body ProfileCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*ProfileCreateResult, error) {
+	rsp, err := c.ProfileCreate(ctx, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseProfileCreateResult(rsp)
+}
+
+// ProfileDeleteWithResponse request returning *ProfileDeleteResult
+func (c *ClientWithResponses) ProfileDeleteWithResponse(ctx context.Context, profileId string, params *ProfileDeleteParams, reqEditors ...RequestEditorFn) (*ProfileDeleteResult, error) {
+	rsp, err := c.ProfileDelete(ctx, profileId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseProfileDeleteResult(rsp)
+}
+
+// ProfileGetWithResponse request returning *ProfileGetResult
+func (c *ClientWithResponses) ProfileGetWithResponse(ctx context.Context, profileId string, params *ProfileGetParams, reqEditors ...RequestEditorFn) (*ProfileGetResult, error) {
+	rsp, err := c.ProfileGet(ctx, profileId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseProfileGetResult(rsp)
 }
 
 // ImprovePromptWithBodyWithResponse request with arbitrary body returning *ImprovePromptResult
@@ -16083,139 +16916,6 @@ func (c *ClientWithResponses) VaultCredentialsAddWithResponse(ctx context.Contex
 	return ParseVaultCredentialsAddResult(rsp)
 }
 
-// ListWorkflowsWithResponse request returning *ListWorkflowsResult
-func (c *ClientWithResponses) ListWorkflowsWithResponse(ctx context.Context, params *ListWorkflowsParams, reqEditors ...RequestEditorFn) (*ListWorkflowsResult, error) {
-	rsp, err := c.ListWorkflows(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseListWorkflowsResult(rsp)
-}
-
-// WorkflowCreateWithBodyWithResponse request with arbitrary body returning *WorkflowCreateResult
-func (c *ClientWithResponses) WorkflowCreateWithBodyWithResponse(ctx context.Context, params *WorkflowCreateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WorkflowCreateResult, error) {
-	rsp, err := c.WorkflowCreateWithBody(ctx, params, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowCreateResult(rsp)
-}
-
-// WorkflowDeleteWithResponse request returning *WorkflowDeleteResult
-func (c *ClientWithResponses) WorkflowDeleteWithResponse(ctx context.Context, workflowId string, params *WorkflowDeleteParams, reqEditors ...RequestEditorFn) (*WorkflowDeleteResult, error) {
-	rsp, err := c.WorkflowDelete(ctx, workflowId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowDeleteResult(rsp)
-}
-
-// WorkflowDownloadUrlWithResponse request returning *WorkflowDownloadUrlResult
-func (c *ClientWithResponses) WorkflowDownloadUrlWithResponse(ctx context.Context, workflowId string, params *WorkflowDownloadUrlParams, reqEditors ...RequestEditorFn) (*WorkflowDownloadUrlResult, error) {
-	rsp, err := c.WorkflowDownloadUrl(ctx, workflowId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowDownloadUrlResult(rsp)
-}
-
-// WorkflowUpdateWithBodyWithResponse request with arbitrary body returning *WorkflowUpdateResult
-func (c *ClientWithResponses) WorkflowUpdateWithBodyWithResponse(ctx context.Context, workflowId string, params *WorkflowUpdateParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WorkflowUpdateResult, error) {
-	rsp, err := c.WorkflowUpdateWithBody(ctx, workflowId, params, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowUpdateResult(rsp)
-}
-
-// WorkflowForkWithResponse request returning *WorkflowForkResult
-func (c *ClientWithResponses) WorkflowForkWithResponse(ctx context.Context, workflowId string, params *WorkflowForkParams, reqEditors ...RequestEditorFn) (*WorkflowForkResult, error) {
-	rsp, err := c.WorkflowFork(ctx, workflowId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowForkResult(rsp)
-}
-
-// ListWorkflowRunsByWorkflowIdWithResponse request returning *ListWorkflowRunsByWorkflowIdResult
-func (c *ClientWithResponses) ListWorkflowRunsByWorkflowIdWithResponse(ctx context.Context, workflowId string, params *ListWorkflowRunsByWorkflowIdParams, reqEditors ...RequestEditorFn) (*ListWorkflowRunsByWorkflowIdResult, error) {
-	rsp, err := c.ListWorkflowRunsByWorkflowId(ctx, workflowId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseListWorkflowRunsByWorkflowIdResult(rsp)
-}
-
-// WorkflowRunStartWithResponse request returning *WorkflowRunStartResult
-func (c *ClientWithResponses) WorkflowRunStartWithResponse(ctx context.Context, workflowId string, params *WorkflowRunStartParams, reqEditors ...RequestEditorFn) (*WorkflowRunStartResult, error) {
-	rsp, err := c.WorkflowRunStart(ctx, workflowId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowRunStartResult(rsp)
-}
-
-// WorkflowRunStopWithResponse request returning *WorkflowRunStopResult
-func (c *ClientWithResponses) WorkflowRunStopWithResponse(ctx context.Context, workflowId string, runId string, params *WorkflowRunStopParams, reqEditors ...RequestEditorFn) (*WorkflowRunStopResult, error) {
-	rsp, err := c.WorkflowRunStop(ctx, workflowId, runId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowRunStopResult(rsp)
-}
-
-// WorkflowRunGetMetadataWithResponse request returning *WorkflowRunGetMetadataResult
-func (c *ClientWithResponses) WorkflowRunGetMetadataWithResponse(ctx context.Context, workflowId string, runId string, params *WorkflowRunGetMetadataParams, reqEditors ...RequestEditorFn) (*WorkflowRunGetMetadataResult, error) {
-	rsp, err := c.WorkflowRunGetMetadata(ctx, workflowId, runId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowRunGetMetadataResult(rsp)
-}
-
-// WorkflowRunUpdateMetadataWithBodyWithResponse request with arbitrary body returning *WorkflowRunUpdateMetadataResult
-func (c *ClientWithResponses) WorkflowRunUpdateMetadataWithBodyWithResponse(ctx context.Context, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WorkflowRunUpdateMetadataResult, error) {
-	rsp, err := c.WorkflowRunUpdateMetadataWithBody(ctx, workflowId, runId, params, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowRunUpdateMetadataResult(rsp)
-}
-
-func (c *ClientWithResponses) WorkflowRunUpdateMetadataWithResponse(ctx context.Context, workflowId string, runId string, params *WorkflowRunUpdateMetadataParams, body WorkflowRunUpdateMetadataJSONRequestBody, reqEditors ...RequestEditorFn) (*WorkflowRunUpdateMetadataResult, error) {
-	rsp, err := c.WorkflowRunUpdateMetadata(ctx, workflowId, runId, params, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowRunUpdateMetadataResult(rsp)
-}
-
-// WorkflowScheduleDeleteWithResponse request returning *WorkflowScheduleDeleteResult
-func (c *ClientWithResponses) WorkflowScheduleDeleteWithResponse(ctx context.Context, workflowId string, params *WorkflowScheduleDeleteParams, reqEditors ...RequestEditorFn) (*WorkflowScheduleDeleteResult, error) {
-	rsp, err := c.WorkflowScheduleDelete(ctx, workflowId, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowScheduleDeleteResult(rsp)
-}
-
-// WorkflowScheduleSetWithBodyWithResponse request with arbitrary body returning *WorkflowScheduleSetResult
-func (c *ClientWithResponses) WorkflowScheduleSetWithBodyWithResponse(ctx context.Context, workflowId string, params *WorkflowScheduleSetParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*WorkflowScheduleSetResult, error) {
-	rsp, err := c.WorkflowScheduleSetWithBody(ctx, workflowId, params, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowScheduleSetResult(rsp)
-}
-
-func (c *ClientWithResponses) WorkflowScheduleSetWithResponse(ctx context.Context, workflowId string, params *WorkflowScheduleSetParams, body WorkflowScheduleSetJSONRequestBody, reqEditors ...RequestEditorFn) (*WorkflowScheduleSetResult, error) {
-	rsp, err := c.WorkflowScheduleSet(ctx, workflowId, params, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseWorkflowScheduleSetResult(rsp)
-}
-
 // ParseListAgentsResult parses an HTTP response from a ListAgentsWithResponse call
 func ParseListAgentsResult(rsp *http.Response) (*ListAgentsResult, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -16389,7 +17089,436 @@ func ParseGetScriptResult(rsp *http.Response) (*GetScriptResult, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest AgentWorkflowCodeResponse
+		var dest AgentFunctionCodeResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListFunctionsResult parses an HTTP response from a ListFunctionsWithResponse call
+func ParseListFunctionsResult(rsp *http.Response) (*ListFunctionsResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListFunctionsResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResponseGetFunctionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionCreateResult parses an HTTP response from a FunctionCreateWithResponse call
+func ParseFunctionCreateResult(rsp *http.Response) (*FunctionCreateResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionCreateResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetFunctionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionDeleteResult parses an HTTP response from a FunctionDeleteWithResponse call
+func ParseFunctionDeleteResult(rsp *http.Response) (*FunctionDeleteResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionDeleteResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DeleteFunctionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionDownloadUrlResult parses an HTTP response from a FunctionDownloadUrlWithResponse call
+func ParseFunctionDownloadUrlResult(rsp *http.Response) (*FunctionDownloadUrlResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionDownloadUrlResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetFunctionWithLinkResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionUpdateResult parses an HTTP response from a FunctionUpdateWithResponse call
+func ParseFunctionUpdateResult(rsp *http.Response) (*FunctionUpdateResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionUpdateResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetFunctionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionForkResult parses an HTTP response from a FunctionForkWithResponse call
+func ParseFunctionForkResult(rsp *http.Response) (*FunctionForkResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionForkResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetFunctionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListFunctionRunsByFunctionIdResult parses an HTTP response from a ListFunctionRunsByFunctionIdWithResponse call
+func ParseListFunctionRunsByFunctionIdResult(rsp *http.Response) (*ListFunctionRunsByFunctionIdResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListFunctionRunsByFunctionIdResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResponseGetFunctionRunResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionRunStartResult parses an HTTP response from a FunctionRunStartWithResponse call
+func ParseFunctionRunStartResult(rsp *http.Response) (*FunctionRunStartResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionRunStartResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest interface{}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionRunStopResult parses an HTTP response from a FunctionRunStopWithResponse call
+func ParseFunctionRunStopResult(rsp *http.Response) (*FunctionRunStopResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionRunStopResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UpdateFunctionRunResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionRunGetMetadataResult parses an HTTP response from a FunctionRunGetMetadataWithResponse call
+func ParseFunctionRunGetMetadataResult(rsp *http.Response) (*FunctionRunGetMetadataResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionRunGetMetadataResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetFunctionRunResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionRunUpdateMetadataResult parses an HTTP response from a FunctionRunUpdateMetadataWithResponse call
+func ParseFunctionRunUpdateMetadataResult(rsp *http.Response) (*FunctionRunUpdateMetadataResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionRunUpdateMetadataResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UpdateFunctionRunResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionScheduleDeleteResult parses an HTTP response from a FunctionScheduleDeleteWithResponse call
+func ParseFunctionScheduleDeleteResult(rsp *http.Response) (*FunctionScheduleDeleteResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionScheduleDeleteResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScheduleDeleteResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFunctionScheduleSetResult parses an HTTP response from a FunctionScheduleSetWithResponse call
+func ParseFunctionScheduleSetResult(rsp *http.Response) (*FunctionScheduleSetResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FunctionScheduleSetResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ScheduleResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -16680,6 +17809,138 @@ func ParsePersonaCreateNumberResult(rsp *http.Response) (*PersonaCreateNumberRes
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest CreatePhoneNumberResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseProfileListResult parses an HTTP response from a ProfileListWithResponse call
+func ParseProfileListResult(rsp *http.Response) (*ProfileListResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ProfileListResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedResponseProfileResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseProfileCreateResult parses an HTTP response from a ProfileCreateWithResponse call
+func ParseProfileCreateResult(rsp *http.Response) (*ProfileCreateResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ProfileCreateResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ProfileResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseProfileDeleteResult parses an HTTP response from a ProfileDeleteWithResponse call
+func ParseProfileDeleteResult(rsp *http.Response) (*ProfileDeleteResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ProfileDeleteResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ProfileDeleteResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest HTTPValidationError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON422 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseProfileGetResult parses an HTTP response from a ProfileGetWithResponse call
+func ParseProfileGetResult(rsp *http.Response) (*ProfileGetResult, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ProfileGetResult{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ProfileResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -17266,7 +18527,7 @@ func ParseGetSessionScriptResult(rsp *http.Response) (*GetSessionScriptResult, e
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest AgentWorkflowCodeResponse
+		var dest AgentFunctionCodeResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -17863,435 +19124,6 @@ func ParseVaultCredentialsAddResult(rsp *http.Response) (*VaultCredentialsAddRes
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest AddCredentialsResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseListWorkflowsResult parses an HTTP response from a ListWorkflowsWithResponse call
-func ParseListWorkflowsResult(rsp *http.Response) (*ListWorkflowsResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ListWorkflowsResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest PaginatedResponseGetWorkflowResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowCreateResult parses an HTTP response from a WorkflowCreateWithResponse call
-func ParseWorkflowCreateResult(rsp *http.Response) (*WorkflowCreateResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowCreateResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GetWorkflowResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowDeleteResult parses an HTTP response from a WorkflowDeleteWithResponse call
-func ParseWorkflowDeleteResult(rsp *http.Response) (*WorkflowDeleteResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowDeleteResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest DeleteWorkflowResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowDownloadUrlResult parses an HTTP response from a WorkflowDownloadUrlWithResponse call
-func ParseWorkflowDownloadUrlResult(rsp *http.Response) (*WorkflowDownloadUrlResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowDownloadUrlResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GetWorkflowWithLinkResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowUpdateResult parses an HTTP response from a WorkflowUpdateWithResponse call
-func ParseWorkflowUpdateResult(rsp *http.Response) (*WorkflowUpdateResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowUpdateResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GetWorkflowResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowForkResult parses an HTTP response from a WorkflowForkWithResponse call
-func ParseWorkflowForkResult(rsp *http.Response) (*WorkflowForkResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowForkResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GetWorkflowResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseListWorkflowRunsByWorkflowIdResult parses an HTTP response from a ListWorkflowRunsByWorkflowIdWithResponse call
-func ParseListWorkflowRunsByWorkflowIdResult(rsp *http.Response) (*ListWorkflowRunsByWorkflowIdResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ListWorkflowRunsByWorkflowIdResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest PaginatedResponseGetWorkflowRunResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowRunStartResult parses an HTTP response from a WorkflowRunStartWithResponse call
-func ParseWorkflowRunStartResult(rsp *http.Response) (*WorkflowRunStartResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowRunStartResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest interface{}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowRunStopResult parses an HTTP response from a WorkflowRunStopWithResponse call
-func ParseWorkflowRunStopResult(rsp *http.Response) (*WorkflowRunStopResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowRunStopResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest UpdateWorkflowRunResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowRunGetMetadataResult parses an HTTP response from a WorkflowRunGetMetadataWithResponse call
-func ParseWorkflowRunGetMetadataResult(rsp *http.Response) (*WorkflowRunGetMetadataResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowRunGetMetadataResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest GetWorkflowRunResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowRunUpdateMetadataResult parses an HTTP response from a WorkflowRunUpdateMetadataWithResponse call
-func ParseWorkflowRunUpdateMetadataResult(rsp *http.Response) (*WorkflowRunUpdateMetadataResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowRunUpdateMetadataResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest UpdateWorkflowRunResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowScheduleDeleteResult parses an HTTP response from a WorkflowScheduleDeleteWithResponse call
-func ParseWorkflowScheduleDeleteResult(rsp *http.Response) (*WorkflowScheduleDeleteResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowScheduleDeleteResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ScheduleDeleteResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseWorkflowScheduleSetResult parses an HTTP response from a WorkflowScheduleSetWithResponse call
-func ParseWorkflowScheduleSetResult(rsp *http.Response) (*WorkflowScheduleSetResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &WorkflowScheduleSetResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ScheduleResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
