@@ -80,7 +80,7 @@ func TestRunSessionsStart(t *testing.T) {
 
 	origHeadless := sessionsStartHeadless
 	origBrowser := sessionsStartBrowser
-	origTimeout := sessionsStartTimeout
+	origTimeout := sessionsStartIdleTimeout
 	origProxies := sessionsStartProxies
 	origSolve := sessionsStartSolveCaptchas
 	origVW := sessionsStartViewportW
@@ -90,7 +90,7 @@ func TestRunSessionsStart(t *testing.T) {
 	t.Cleanup(func() {
 		sessionsStartHeadless = origHeadless
 		sessionsStartBrowser = origBrowser
-		sessionsStartTimeout = origTimeout
+		sessionsStartIdleTimeout = origTimeout
 		sessionsStartProxies = origProxies
 		sessionsStartSolveCaptchas = origSolve
 		sessionsStartViewportW = origVW
@@ -101,7 +101,7 @@ func TestRunSessionsStart(t *testing.T) {
 
 	sessionsStartHeadless = false
 	sessionsStartBrowser = "firefox"
-	sessionsStartTimeout = 5
+	sessionsStartIdleTimeout = 5
 	sessionsStartProxies = true
 	sessionsStartSolveCaptchas = true
 	sessionsStartViewportW = 1280
@@ -146,7 +146,7 @@ func TestRunSessionsStart_Minimal(t *testing.T) {
 
 	origHeadless := sessionsStartHeadless
 	origBrowser := sessionsStartBrowser
-	origTimeout := sessionsStartTimeout
+	origTimeout := sessionsStartIdleTimeout
 	origProxies := sessionsStartProxies
 	origSolve := sessionsStartSolveCaptchas
 	origVW := sessionsStartViewportW
@@ -156,7 +156,7 @@ func TestRunSessionsStart_Minimal(t *testing.T) {
 	t.Cleanup(func() {
 		sessionsStartHeadless = origHeadless
 		sessionsStartBrowser = origBrowser
-		sessionsStartTimeout = origTimeout
+		sessionsStartIdleTimeout = origTimeout
 		sessionsStartProxies = origProxies
 		sessionsStartSolveCaptchas = origSolve
 		sessionsStartViewportW = origVW
@@ -167,7 +167,7 @@ func TestRunSessionsStart_Minimal(t *testing.T) {
 
 	sessionsStartHeadless = true
 	sessionsStartBrowser = ""
-	sessionsStartTimeout = 0
+	sessionsStartIdleTimeout = 0
 	sessionsStartProxies = false
 	sessionsStartSolveCaptchas = false
 	sessionsStartViewportW = 0
