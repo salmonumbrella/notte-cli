@@ -113,6 +113,7 @@ func TestRunSessionsStart(t *testing.T) {
 	origVH := sessionsStartViewportH
 	origUA := sessionsStartUserAgent
 	origCDP := sessionsStartCdpURL
+	origFileStorage := sessionsStartFileStorage
 	t.Cleanup(func() {
 		sessionsStartHeadless = origHeadless
 		sessionsStartBrowser = origBrowser
@@ -123,6 +124,7 @@ func TestRunSessionsStart(t *testing.T) {
 		sessionsStartViewportH = origVH
 		sessionsStartUserAgent = origUA
 		sessionsStartCdpURL = origCDP
+		sessionsStartFileStorage = origFileStorage
 	})
 
 	sessionsStartHeadless = false
@@ -134,6 +136,7 @@ func TestRunSessionsStart(t *testing.T) {
 	sessionsStartViewportH = 720
 	sessionsStartUserAgent = "test-agent"
 	sessionsStartCdpURL = "ws://cdp"
+	sessionsStartFileStorage = true
 
 	origFormat := outputFormat
 	outputFormat = "json"
@@ -143,9 +146,11 @@ func TestRunSessionsStart(t *testing.T) {
 	cmd.Flags().BoolVar(&sessionsStartHeadless, "headless", true, "")
 	cmd.Flags().BoolVar(&sessionsStartProxies, "proxies", false, "")
 	cmd.Flags().BoolVar(&sessionsStartSolveCaptchas, "solve-captchas", false, "")
+	cmd.Flags().BoolVar(&sessionsStartFileStorage, "file-storage", false, "")
 	_ = cmd.Flags().Set("headless", "false")
 	_ = cmd.Flags().Set("proxies", "true")
 	_ = cmd.Flags().Set("solve-captchas", "true")
+	_ = cmd.Flags().Set("file-storage", "true")
 	cmd.SetContext(context.Background())
 
 	stdout, _ := testutil.CaptureOutput(func() {
@@ -726,9 +731,9 @@ func TestGetCurrentSessionID_FromFlag(t *testing.T) {
 	sessionID = "flag_session"
 	t.Cleanup(func() { sessionID = origID })
 
-	got := getCurrentSessionID()
+	got := GetCurrentSessionID()
 	if got != "flag_session" {
-		t.Errorf("getCurrentSessionID() = %q, want %q", got, "flag_session")
+		t.Errorf("GetCurrentSessionID() = %q, want %q", got, "flag_session")
 	}
 }
 
@@ -740,9 +745,9 @@ func TestGetCurrentSessionID_FromEnvVar(t *testing.T) {
 	env := testutil.SetupTestEnv(t)
 	env.SetEnv("NOTTE_SESSION_ID", "env_session")
 
-	got := getCurrentSessionID()
+	got := GetCurrentSessionID()
 	if got != "env_session" {
-		t.Errorf("getCurrentSessionID() = %q, want %q", got, "env_session")
+		t.Errorf("GetCurrentSessionID() = %q, want %q", got, "env_session")
 	}
 }
 
@@ -767,9 +772,9 @@ func TestGetCurrentSessionID_FromFile(t *testing.T) {
 		t.Fatalf("failed to write session file: %v", err)
 	}
 
-	got := getCurrentSessionID()
+	got := GetCurrentSessionID()
 	if got != "file_session" {
-		t.Errorf("getCurrentSessionID() = %q, want %q", got, "file_session")
+		t.Errorf("GetCurrentSessionID() = %q, want %q", got, "file_session")
 	}
 }
 
@@ -794,21 +799,21 @@ func TestGetCurrentSessionID_Priority(t *testing.T) {
 	sessionID = "flag_session"
 	env.SetEnv("NOTTE_SESSION_ID", "env_session")
 
-	got := getCurrentSessionID()
+	got := GetCurrentSessionID()
 	if got != "flag_session" {
 		t.Errorf("flag should have highest priority: got %q, want %q", got, "flag_session")
 	}
 
 	// Test: env > file
 	sessionID = ""
-	got = getCurrentSessionID()
+	got = GetCurrentSessionID()
 	if got != "env_session" {
 		t.Errorf("env should have priority over file: got %q, want %q", got, "env_session")
 	}
 
 	// Test: file as fallback
 	env.SetEnv("NOTTE_SESSION_ID", "")
-	got = getCurrentSessionID()
+	got = GetCurrentSessionID()
 	if got != "file_session" {
 		t.Errorf("file should be fallback: got %q, want %q", got, "file_session")
 	}
@@ -880,9 +885,9 @@ func TestRequireSessionID_NoSession(t *testing.T) {
 	env.SetEnv("NOTTE_SESSION_ID", "")
 	_ = setupSessionFileTest(t)
 
-	err := requireSessionID()
+	err := RequireSessionID()
 	if err == nil {
-		t.Fatal("requireSessionID() should error when no session ID available")
+		t.Fatal("RequireSessionID() should error when no session ID available")
 	}
 
 	expectedMsg := "session ID required"
@@ -910,9 +915,9 @@ func TestRequireSessionID_FromFile(t *testing.T) {
 		t.Fatalf("failed to write session file: %v", err)
 	}
 
-	err := requireSessionID()
+	err := RequireSessionID()
 	if err != nil {
-		t.Fatalf("requireSessionID() error = %v", err)
+		t.Fatalf("RequireSessionID() error = %v", err)
 	}
 
 	if sessionID != "file_session" {

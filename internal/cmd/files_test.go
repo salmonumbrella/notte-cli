@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/salmonumbrella/notte-cli/internal/config"
 	"github.com/salmonumbrella/notte-cli/internal/testutil"
 )
 
@@ -23,13 +24,13 @@ func TestRunFilesListUploads(t *testing.T) {
 	server.AddResponse("/storage/uploads", 200, `{"files":["a.txt"]}`)
 
 	origDownloadsFlag := filesListDownloadsFlag
-	origSession := filesDownloadSession
+	origSession := sessionID
 	t.Cleanup(func() {
 		filesListDownloadsFlag = origDownloadsFlag
-		filesDownloadSession = origSession
+		sessionID = origSession
 	})
 	filesListDownloadsFlag = false
-	filesDownloadSession = ""
+	sessionID = ""
 
 	origFormat := outputFormat
 	outputFormat = "json"
@@ -61,13 +62,13 @@ func TestRunFilesListUploadsEmpty(t *testing.T) {
 	server.AddResponse("/storage/uploads", 200, `{"files":[]}`)
 
 	origDownloadsFlag := filesListDownloadsFlag
-	origSession := filesDownloadSession
+	origSession := sessionID
 	t.Cleanup(func() {
 		filesListDownloadsFlag = origDownloadsFlag
-		filesDownloadSession = origSession
+		sessionID = origSession
 	})
 	filesListDownloadsFlag = false
-	filesDownloadSession = ""
+	sessionID = ""
 
 	origFormat := outputFormat
 	outputFormat = "text"
@@ -99,13 +100,13 @@ func TestRunFilesListDownloads(t *testing.T) {
 	server.AddResponse("/storage/sess_123/downloads", 200, `{"files":["b.txt"]}`)
 
 	origDownloadsFlag := filesListDownloadsFlag
-	origSession := filesDownloadSession
+	origSession := sessionID
 	t.Cleanup(func() {
 		filesListDownloadsFlag = origDownloadsFlag
-		filesDownloadSession = origSession
+		sessionID = origSession
 	})
 	filesListDownloadsFlag = true
-	filesDownloadSession = "sess_123"
+	sessionID = "sess_123"
 
 	origFormat := outputFormat
 	outputFormat = "json"
@@ -128,16 +129,22 @@ func TestRunFilesListDownloads(t *testing.T) {
 
 func TestRunFilesListDownloadsMissingSession(t *testing.T) {
 	env := testutil.SetupTestEnv(t)
-	env.SetEnv("NOTTE_API_KEY", "test-key")
+	env.SetEnv("NOTTE_API_KEY", "test-key") // Need API key for GetClient()
+	env.SetEnv("NOTTE_SESSION_ID", "")      // Clear session env var
+
+	// Set up empty config dir (no session file)
+	tmpDir := t.TempDir()
+	config.SetTestConfigDir(tmpDir)
+	t.Cleanup(func() { config.SetTestConfigDir("") })
 
 	origDownloadsFlag := filesListDownloadsFlag
-	origSession := filesDownloadSession
+	origSession := sessionID
 	t.Cleanup(func() {
 		filesListDownloadsFlag = origDownloadsFlag
-		filesDownloadSession = origSession
+		sessionID = origSession
 	})
 	filesListDownloadsFlag = true
-	filesDownloadSession = ""
+	sessionID = ""
 
 	cmd := &cobra.Command{}
 	cmd.SetContext(context.Background())
@@ -146,7 +153,7 @@ func TestRunFilesListDownloadsMissingSession(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing session")
 	}
-	if !strings.Contains(err.Error(), "--session is required") {
+	if !strings.Contains(err.Error(), "session ID required") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -214,13 +221,13 @@ func TestRunFilesDownload(t *testing.T) {
 	defer server.Close()
 	env.SetEnv("NOTTE_API_URL", server.URL())
 
-	origSession := filesDownloadSession
+	origSession := sessionID
 	origOutput := filesDownloadOutput
 	t.Cleanup(func() {
-		filesDownloadSession = origSession
+		sessionID = origSession
 		filesDownloadOutput = origOutput
 	})
-	filesDownloadSession = "sess_123"
+	sessionID = "sess_123"
 
 	outDir := t.TempDir()
 	outputPath := filepath.Join(outDir, "download.txt")
@@ -257,9 +264,17 @@ func TestRunFilesDownload(t *testing.T) {
 }
 
 func TestRunFilesDownloadMissingSession(t *testing.T) {
-	origSession := filesDownloadSession
-	t.Cleanup(func() { filesDownloadSession = origSession })
-	filesDownloadSession = ""
+	env := testutil.SetupTestEnv(t)
+	env.SetEnv("NOTTE_SESSION_ID", "") // Clear session env var
+
+	// Set up empty config dir (no session file)
+	tmpDir := t.TempDir()
+	config.SetTestConfigDir(tmpDir)
+	t.Cleanup(func() { config.SetTestConfigDir("") })
+
+	origSession := sessionID
+	t.Cleanup(func() { sessionID = origSession })
+	sessionID = ""
 
 	cmd := &cobra.Command{}
 	cmd.SetContext(context.Background())
@@ -268,7 +283,7 @@ func TestRunFilesDownloadMissingSession(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing session")
 	}
-	if !strings.Contains(err.Error(), "--session is required") {
+	if !strings.Contains(err.Error(), "session ID required") {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }

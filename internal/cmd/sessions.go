@@ -26,6 +26,7 @@ var (
 	sessionsStartViewportH     int
 	sessionsStartUserAgent     string
 	sessionsStartCdpURL        string
+	sessionsStartFileStorage   bool
 )
 
 var (
@@ -37,8 +38,8 @@ var (
 	sessionCookiesSetFile     string
 )
 
-// getCurrentSessionID returns the session ID from flag, env var, or file (in priority order)
-func getCurrentSessionID() string {
+// GetCurrentSessionID returns the session ID from flag, env var, or file (in priority order)
+func GetCurrentSessionID() string {
 	// 1. Check --id flag (already in sessionID variable if set)
 	if sessionID != "" {
 		return sessionID
@@ -87,9 +88,9 @@ func clearCurrentSession() error {
 	return nil
 }
 
-// requireSessionID ensures a session ID is available from flag, env, or file
-func requireSessionID() error {
-	sessionID = getCurrentSessionID()
+// RequireSessionID ensures a session ID is available from flag, env, or file
+func RequireSessionID() error {
+	sessionID = GetCurrentSessionID()
 	if sessionID == "" {
 		return errors.New("session ID required: use --id flag, set NOTTE_SESSION_ID env var, or start a session first")
 	}
@@ -234,6 +235,7 @@ func init() {
 	sessionsStartCmd.Flags().IntVar(&sessionsStartViewportH, "viewport-height", 0, "Viewport height in pixels")
 	sessionsStartCmd.Flags().StringVar(&sessionsStartUserAgent, "user-agent", "", "Custom user agent string")
 	sessionsStartCmd.Flags().StringVar(&sessionsStartCdpURL, "cdp-url", "", "CDP URL of remote session provider")
+	sessionsStartCmd.Flags().BoolVar(&sessionsStartFileStorage, "file-storage", false, "Enable file storage for the session")
 
 	// Status command flags
 	sessionsStatusCmd.Flags().StringVar(&sessionID, "id", "", "Session ID (uses current session if not specified)")
@@ -377,6 +379,11 @@ func runSessionsStart(cmd *cobra.Command, args []string) error {
 		body.CdpUrl = &sessionsStartCdpURL
 	}
 
+	// Set file storage if flag was provided
+	if cmd.Flags().Changed("file-storage") {
+		body.UseFileStorage = &sessionsStartFileStorage
+	}
+
 	params := &api.SessionStartParams{}
 	resp, err := client.Client().SessionStartWithResponse(ctx, params, body)
 	if err != nil {
@@ -399,7 +406,7 @@ func runSessionsStart(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionStatus(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 	client, err := GetClient()
@@ -424,7 +431,7 @@ func runSessionStatus(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionStop(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -470,7 +477,7 @@ func runSessionStop(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionObserve(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -501,7 +508,7 @@ func runSessionObserve(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionExecute(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -538,7 +545,7 @@ func runSessionExecute(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionScrape(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -572,7 +579,7 @@ func runSessionScrape(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionCookies(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -598,7 +605,7 @@ func runSessionCookies(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionCookiesSet(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -636,7 +643,7 @@ func runSessionCookiesSet(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionDebug(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -662,7 +669,7 @@ func runSessionDebug(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionNetwork(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -688,7 +695,7 @@ func runSessionNetwork(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionReplay(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -719,7 +726,7 @@ func runSessionReplay(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionOffset(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 
@@ -745,7 +752,7 @@ func runSessionOffset(cmd *cobra.Command, args []string) error {
 }
 
 func runSessionWorkflowCode(cmd *cobra.Command, args []string) error {
-	if err := requireSessionID(); err != nil {
+	if err := RequireSessionID(); err != nil {
 		return err
 	}
 

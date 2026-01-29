@@ -16,7 +16,6 @@ import (
 var (
 	filesListUploadsFlag   bool
 	filesListDownloadsFlag bool
-	filesDownloadSession   string
 	filesDownloadOutput    string
 )
 
@@ -30,7 +29,7 @@ var filesListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List uploaded files",
 	Long: `List files in storage. Use --uploads to list uploaded files,
-or --downloads with --session to list downloaded files from a session.`,
+or --downloads to list downloaded files from a session.`,
 	RunE: runFilesList,
 }
 
@@ -59,12 +58,11 @@ func init() {
 	// List command flags
 	filesListCmd.Flags().BoolVar(&filesListUploadsFlag, "uploads", true, "List uploaded files")
 	filesListCmd.Flags().BoolVar(&filesListDownloadsFlag, "downloads", false, "List downloaded files from a session")
-	filesListCmd.Flags().StringVar(&filesDownloadSession, "session", "", "Session ID (required for --downloads)")
+	filesListCmd.Flags().StringVar(&sessionID, "id", "", "Session ID (uses current session if not specified)")
 
 	// Download command flags
-	filesDownloadCmd.Flags().StringVar(&filesDownloadSession, "session", "", "Session ID (required)")
+	filesDownloadCmd.Flags().StringVar(&sessionID, "id", "", "Session ID (uses current session if not specified)")
 	filesDownloadCmd.Flags().StringVarP(&filesDownloadOutput, "output", "o", "", "Output file path (defaults to current directory)")
-	_ = filesDownloadCmd.MarkFlagRequired("session")
 }
 
 func runFilesList(cmd *cobra.Command, args []string) error {
@@ -77,15 +75,15 @@ func runFilesList(cmd *cobra.Command, args []string) error {
 
 	// If downloads flag is set, list downloads for a session
 	if filesListDownloadsFlag {
-		if filesDownloadSession == "" {
-			return fmt.Errorf("--session is required when using --downloads")
+		if err := RequireSessionID(); err != nil {
+			return err
 		}
 
 		ctx, cancel := GetContextWithTimeout(cmd.Context())
 		defer cancel()
 
 		params := &api.FileListDownloadsParams{}
-		resp, err := client.Client().FileListDownloadsWithResponse(ctx, filesDownloadSession, params)
+		resp, err := client.Client().FileListDownloadsWithResponse(ctx, sessionID, params)
 		if err != nil {
 			return fmt.Errorf("API request failed: %w", err)
 		}
@@ -213,8 +211,8 @@ func runFilesUpload(cmd *cobra.Command, args []string) error {
 func runFilesDownload(cmd *cobra.Command, args []string) error {
 	filename := args[0]
 
-	if filesDownloadSession == "" {
-		return fmt.Errorf("--session is required")
+	if err := RequireSessionID(); err != nil {
+		return err
 	}
 
 	client, err := GetClient()
@@ -228,7 +226,7 @@ func runFilesDownload(cmd *cobra.Command, args []string) error {
 	params := &api.FileDownloadParams{}
 	resp, err := client.Client().FileDownloadWithResponse(
 		ctx,
-		filesDownloadSession,
+		sessionID,
 		filename,
 		params,
 	)
