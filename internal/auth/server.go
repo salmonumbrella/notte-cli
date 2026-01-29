@@ -283,91 +283,103 @@ func (s *SetupServer) handleComplete(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *SetupServer) handleCallback(w http.ResponseWriter, r *http.Request) {
-	// Verify state parameter for CSRF protection
-	state := r.URL.Query().Get("state")
-	if state != s.oauthState {
-		tmpl, err := template.New("callback_error").Parse(callbackErrorTemplate)
+	switch r.Method {
+	case http.MethodGet:
+		// Serve HTML page that extracts token from URL fragment
+		// Fragments (#token=xxx) are never sent to server, so we need JS to extract and POST it
+		tmpl, err := template.New("callback").Parse(callbackTemplate)
 		if err != nil {
 			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusForbidden)
 		_ = tmpl.Execute(w, map[string]string{
-			"Error": "Invalid state parameter. This may be a security issue. Please try again.",
+			"ExpectedState": s.oauthState,
 		})
-		return
-	}
 
-	// Get token from query parameter
-	token := r.URL.Query().Get("token")
-	if token == "" {
-		tmpl, err := template.New("callback_error").Parse(callbackErrorTemplate)
-		if err != nil {
-			http.Error(w, "Internal error", http.StatusInternalServerError)
+	case http.MethodPost:
+		// Receive token from the fragment extractor page
+		var req struct {
+			Token string `json:"token"`
+			State string `json:"state"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]any{
+				"success": false,
+				"error":   "Invalid request body",
+			})
 			return
 		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusBadRequest)
-		_ = tmpl.Execute(w, map[string]string{
-			"Error": "No API key received from console. Please try again.",
+
+		// Verify state parameter for CSRF protection
+		if req.State != s.oauthState {
+			writeJSON(w, http.StatusForbidden, map[string]any{
+				"success": false,
+				"error":   "Invalid state parameter",
+			})
+			return
+		}
+
+		if req.Token == "" {
+			writeJSON(w, http.StatusBadRequest, map[string]any{
+				"success": false,
+				"error":   "No token received",
+			})
+			return
+		}
+
+		// Validate the API key
+		client, err := api.NewClient(req.Token)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]any{
+				"success": false,
+				"error":   fmt.Sprintf("Invalid API key: %v", err),
+			})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+
+		resp, err := client.Client().HealthCheckWithResponse(ctx)
+		if err != nil {
+			writeJSON(w, http.StatusBadGateway, map[string]any{
+				"success": false,
+				"error":   fmt.Sprintf("Connection failed: %v", err),
+			})
+			return
+		}
+
+		if resp.StatusCode() != 200 {
+			writeJSON(w, http.StatusBadGateway, map[string]any{
+				"success": false,
+				"error":   fmt.Sprintf("API error: %s", resp.Status()),
+			})
+			return
+		}
+
+		// Save to keyring
+		if err := SetKeyringAPIKey(req.Token); err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]any{
+				"success": false,
+				"error":   fmt.Sprintf("Failed to save credentials: %v", err),
+			})
+			return
+		}
+
+		// Set pending result
+		s.pendingResult = &SetupResult{
+			APIKey: req.Token,
+		}
+
+		writeJSON(w, http.StatusOK, map[string]any{
+			"success": true,
 		})
-		return
+
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
-
-	// Validate the API key
-	client, err := api.NewClient(token)
-	if err != nil {
-		tmpl, _ := template.New("callback_error").Parse(callbackErrorTemplate)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusBadRequest)
-		_ = tmpl.Execute(w, map[string]string{
-			"Error": fmt.Sprintf("Invalid API key: %v", err),
-		})
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-	defer cancel()
-
-	resp, err := client.Client().HealthCheckWithResponse(ctx)
-	if err != nil {
-		tmpl, _ := template.New("callback_error").Parse(callbackErrorTemplate)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusBadGateway)
-		_ = tmpl.Execute(w, map[string]string{
-			"Error": fmt.Sprintf("Connection failed: %v", err),
-		})
-		return
-	}
-
-	if resp.StatusCode() != 200 {
-		tmpl, _ := template.New("callback_error").Parse(callbackErrorTemplate)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusBadGateway)
-		_ = tmpl.Execute(w, map[string]string{
-			"Error": fmt.Sprintf("API error: %s", resp.Status()),
-		})
-		return
-	}
-
-	// Save to keyring
-	if err := SetKeyringAPIKey(token); err != nil {
-		tmpl, _ := template.New("callback_error").Parse(callbackErrorTemplate)
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusInternalServerError)
-		_ = tmpl.Execute(w, map[string]string{
-			"Error": fmt.Sprintf("Failed to save credentials: %v", err),
-		})
-		return
-	}
-
-	// Set pending result and redirect to success page
-	s.pendingResult = &SetupResult{
-		APIKey: token,
-	}
-
-	http.Redirect(w, r, "/success", http.StatusFound)
 }
 
 func writeJSON(w http.ResponseWriter, status int, data any) {
