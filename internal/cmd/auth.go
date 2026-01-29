@@ -19,10 +19,13 @@ var authCmd = &cobra.Command{
 var authLoginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Authenticate with notte.cc",
-	Long: `Open browser to authenticate with your notte.cc API key.
+	Long: `Open browser to authenticate with Notte.
 
-The API key will be stored securely in your system keychain.
-Get your API key from https://notte.cc/settings`,
+You can authenticate in two ways:
+  1. Sign in with Notte Console (recommended) - automatically fetches your API key
+  2. Enter API key manually - paste your key from console.notte.cc/apikeys
+
+The API key will be stored securely in your system keychain.`,
 	RunE: runAuthLogin,
 }
 
@@ -48,7 +51,10 @@ func init() {
 func runAuthLogin(cmd *cobra.Command, args []string) error {
 	PrintInfo("Opening browser for authentication...")
 
-	server := auth.NewSetupServer()
+	server, err := auth.NewSetupServer()
+	if err != nil {
+		return fmt.Errorf("failed to initialize auth server: %w", err)
+	}
 
 	ctx, cancel := context.WithTimeout(cmd.Context(), 5*time.Minute)
 	defer cancel()
