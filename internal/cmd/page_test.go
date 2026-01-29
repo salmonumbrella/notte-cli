@@ -49,8 +49,8 @@ func TestParseSelector(t *testing.T) {
 		{"#btn", "", "#btn", false},
 		{".class", "", ".class", false},
 		{"button[type=submit]", "", "button[type=submit]", false},
-		{"@", "", "", true},  // edge case: @ with nothing after
-		{"", "", "", true},   // empty string
+		{"@", "", "", true}, // edge case: @ with nothing after
+		{"", "", "", true},  // empty string
 	}
 
 	for _, tt := range tests {

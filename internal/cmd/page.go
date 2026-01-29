@@ -276,7 +276,7 @@ var pageGotoCmd = &cobra.Command{
 func runPageGoto(cmd *cobra.Command, args []string) error {
 	action := map[string]any{
 		"type": "goto",
-		"url":    args[0],
+		"url":  args[0],
 	}
 	return executePageAction(cmd, action)
 }
@@ -291,7 +291,7 @@ var pageNewTabCmd = &cobra.Command{
 func runPageNewTab(cmd *cobra.Command, args []string) error {
 	action := map[string]any{
 		"type": "goto_new_tab",
-		"url":    args[0],
+		"url":  args[0],
 	}
 	return executePageAction(cmd, action)
 }
@@ -388,7 +388,7 @@ var pagePressCmd = &cobra.Command{
 func runPagePress(cmd *cobra.Command, args []string) error {
 	action := map[string]any{
 		"type": "press_key",
-		"key":    args[0],
+		"key":  args[0],
 	}
 	return executePageAction(cmd, action)
 }
@@ -518,8 +518,8 @@ func runPageFormFill(cmd *cobra.Command, args []string) error {
 	}
 
 	action := map[string]any{
-		"type": "form_fill",
-		"value":  formData,
+		"type":  "form_fill",
+		"value": formData,
 	}
 	return executePageAction(cmd, action)
 }
