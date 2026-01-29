@@ -124,7 +124,10 @@ func (s *SetupServer) GetConsoleAuthURL() string {
 	consoleURL := config.GetConsoleURL()
 	callbackURL := s.baseURL + "/callback"
 
-	authURL, _ := url.Parse(consoleURL + "/auth/cli")
+	authURL, err := url.Parse(consoleURL + "/auth/cli")
+	if err != nil {
+		return ""
+	}
 	q := authURL.Query()
 	q.Set("callback", callbackURL)
 	q.Set("state", s.oauthState)
