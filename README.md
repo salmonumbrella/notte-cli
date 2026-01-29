@@ -4,14 +4,14 @@ Control browser sessions, AI agents, and web scraping through intuitive resource
 
 ## Features
 
-- **AI agents** - run and monitor AI-powered browser workflows
+- **AI agents** - run and monitor AI-powered browser functions
 - **Browser sessions** - headless or headed Chrome/Firefox with full control
 - **Files** - upload and download files to notte.cc
 - **Output formats** - human-readable text or JSON for scripting
 - **Personas** - create and manage digital identities with email, phone, and SMS
 - **Secure credentials** - system keyring for API keys, vaults for website passwords
 - **Web scraping** - structured data extraction with custom schemas
-- **Workflows** - schedule and execute repeatable automation tasks
+- **functions** - schedule and execute repeatable automation tasks
 
 ## Installation
 
@@ -153,20 +153,20 @@ notte agents workflow-code --id <id>  # Get agent's workflow code
 notte agents replay --id <id>         # Get agent execution replay
 ```
 
-### Workflows
+### functions
 
 ```bash
-notte workflows list                  # List all workflows
-notte workflows create                # Create a new workflow
-notte workflows show --id <id>        # View workflow details
-notte workflows update --id <id>      # Update workflow configuration
-notte workflows delete --id <id>      # Delete a workflow
-notte workflows fork --id <id>        # Fork workflow to new version
-notte workflows run --id <id>         # Execute workflow
-notte workflows runs --id <id>        # List workflow runs
-notte workflows run-stop --id <id>    # Stop a running workflow
-notte workflows schedule --id <id>    # Schedule recurring execution
-notte workflows unschedule --id <id>  # Remove schedule
+notte functions list                  # List all functions
+notte functions create                # Create a new workflow
+notte functions show --id <id>        # View workflow details
+notte functions update --id <id>      # Update workflow configuration
+notte functions delete --id <id>      # Delete a workflow
+notte functions fork --id <id>        # Fork workflow to new version
+notte functions run --id <id>         # Execute workflow
+notte functions runs --id <id>        # List workflow runs
+notte functions run-stop --id <id>    # Stop a running workflow
+notte functions schedule --id <id>    # Schedule recurring execution
+notte functions unschedule --id <id>  # Remove schedule
 ```
 
 ### Vaults
@@ -226,8 +226,6 @@ notte usage logs                     # View detailed usage logs
 
 ```bash
 notte health                         # Check API health status
-notte prompt-improve                 # Improve a prompt with AI
-notte prompt-nudge                   # Get prompt optimization suggestions
 notte version                        # Show CLI version
 ```
 
@@ -288,11 +286,11 @@ notte sessions stop --id $SESSION_ID
 ### Running a Workflow
 
 ```bash
-# List workflows to find ID
-notte workflows list
+# List functions to find ID
+notte functions list
 
 # Run workflow
-notte workflows run --id wfl_abc123
+notte functions run --id wfl_abc123
 ```
 
 ### Managing Credentials Securely
@@ -364,7 +362,7 @@ notte sessions execute --id $SESSION_ID --action - << 'EOF'
 EOF
 
 # Update workflow metadata with heredoc
-notte workflows run-metadata-update --id $WORKFLOW_ID --run-id $RUN_ID --data - << 'EOF'
+notte functions run-metadata-update --id $WORKFLOW_ID --run-id $RUN_ID --data - << 'EOF'
 {
   "status": "processing",
   "progress": 75,
