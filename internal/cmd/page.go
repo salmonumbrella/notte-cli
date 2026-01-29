@@ -88,7 +88,7 @@ var pageCmd = &cobra.Command{
 	Long: `Execute page actions with a simplified command interface.
 
 Instead of:
-  notte sessions execute --action '{"action": "click", "selector": "#btn"}'
+  notte sessions execute --action '{"type": "click", "selector": "#btn"}'
 
 Use:
   notte page click "#btn"
@@ -107,7 +107,7 @@ var pageClickCmd = &cobra.Command{
 }
 
 func runPageClick(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "click"}
+	action := map[string]any{"type": "click"}
 
 	id, selector := parseSelector(args[0])
 	if id != "" {
@@ -134,7 +134,7 @@ var pageFillCmd = &cobra.Command{
 }
 
 func runPageFill(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "fill"}
+	action := map[string]any{"type": "fill"}
 
 	id, selector := parseSelector(args[0])
 	if id != "" {
@@ -163,7 +163,7 @@ var pageCheckCmd = &cobra.Command{
 }
 
 func runPageCheck(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "check"}
+	action := map[string]any{"type": "check"}
 
 	id, selector := parseSelector(args[0])
 	if id != "" {
@@ -185,7 +185,7 @@ var pageSelectCmd = &cobra.Command{
 }
 
 func runPageSelect(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "select_dropdown_option"}
+	action := map[string]any{"type": "select_dropdown_option"}
 
 	id, selector := parseSelector(args[0])
 	if id != "" {
@@ -207,7 +207,7 @@ var pageDownloadCmd = &cobra.Command{
 }
 
 func runPageDownload(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "download_file"}
+	action := map[string]any{"type": "download_file"}
 
 	id, selector := parseSelector(args[0])
 	if id != "" {
@@ -227,7 +227,7 @@ var pageUploadCmd = &cobra.Command{
 }
 
 func runPageUpload(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "upload_file"}
+	action := map[string]any{"type": "upload_file"}
 
 	id, selector := parseSelector(args[0])
 	if id != "" {
@@ -252,7 +252,7 @@ var pageGotoCmd = &cobra.Command{
 
 func runPageGoto(cmd *cobra.Command, args []string) error {
 	action := map[string]any{
-		"action": "goto",
+		"type": "goto",
 		"url":    args[0],
 	}
 	return executePageAction(cmd, action)
@@ -267,7 +267,7 @@ var pageNewTabCmd = &cobra.Command{
 
 func runPageNewTab(cmd *cobra.Command, args []string) error {
 	action := map[string]any{
-		"action": "goto_new_tab",
+		"type": "goto_new_tab",
 		"url":    args[0],
 	}
 	return executePageAction(cmd, action)
@@ -281,7 +281,7 @@ var pageBackCmd = &cobra.Command{
 }
 
 func runPageBack(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "go_back"}
+	action := map[string]any{"type": "go_back"}
 	return executePageAction(cmd, action)
 }
 
@@ -293,7 +293,7 @@ var pageForwardCmd = &cobra.Command{
 }
 
 func runPageForward(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "go_forward"}
+	action := map[string]any{"type": "go_forward"}
 	return executePageAction(cmd, action)
 }
 
@@ -305,7 +305,7 @@ var pageReloadCmd = &cobra.Command{
 }
 
 func runPageReload(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "reload"}
+	action := map[string]any{"type": "reload"}
 	return executePageAction(cmd, action)
 }
 
@@ -319,7 +319,7 @@ var pageScrollDownCmd = &cobra.Command{
 }
 
 func runPageScrollDown(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "scroll_down"}
+	action := map[string]any{"type": "scroll_down"}
 
 	if len(args) > 0 {
 		amount, err := strconv.Atoi(args[0])
@@ -340,7 +340,7 @@ var pageScrollUpCmd = &cobra.Command{
 }
 
 func runPageScrollUp(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "scroll_up"}
+	action := map[string]any{"type": "scroll_up"}
 
 	if len(args) > 0 {
 		amount, err := strconv.Atoi(args[0])
@@ -364,7 +364,7 @@ var pagePressCmd = &cobra.Command{
 
 func runPagePress(cmd *cobra.Command, args []string) error {
 	action := map[string]any{
-		"action": "press_key",
+		"type": "press_key",
 		"key":    args[0],
 	}
 	return executePageAction(cmd, action)
@@ -386,7 +386,7 @@ func runPageSwitchTab(cmd *cobra.Command, args []string) error {
 	}
 
 	action := map[string]any{
-		"action":    "switch_tab",
+		"type":      "switch_tab",
 		"tab_index": tabIndex,
 	}
 	return executePageAction(cmd, action)
@@ -400,7 +400,7 @@ var pageCloseTabCmd = &cobra.Command{
 }
 
 func runPageCloseTab(cmd *cobra.Command, args []string) error {
-	action := map[string]any{"action": "close_tab"}
+	action := map[string]any{"type": "close_tab"}
 	return executePageAction(cmd, action)
 }
 
@@ -420,7 +420,7 @@ func runPageWait(cmd *cobra.Command, args []string) error {
 	}
 
 	action := map[string]any{
-		"action":  "wait",
+		"type":    "wait",
 		"time_ms": timeMs,
 	}
 	return executePageAction(cmd, action)
@@ -437,7 +437,7 @@ var pageScrapeCmd = &cobra.Command{
 
 func runPageScrape(cmd *cobra.Command, args []string) error {
 	action := map[string]any{
-		"action":       "scrape",
+		"type":         "scrape",
 		"instructions": args[0],
 	}
 
@@ -459,7 +459,7 @@ var pageCaptchaSolveCmd = &cobra.Command{
 
 func runPageCaptchaSolve(cmd *cobra.Command, args []string) error {
 	action := map[string]any{
-		"action":       "captcha_solve",
+		"type":         "captcha_solve",
 		"captcha_type": args[0],
 	}
 	return executePageAction(cmd, action)
@@ -474,7 +474,7 @@ var pageCompleteCmd = &cobra.Command{
 
 func runPageComplete(cmd *cobra.Command, args []string) error {
 	action := map[string]any{
-		"action":  "completion",
+		"type":    "completion",
 		"answer":  args[0],
 		"success": pageCompleteSuccess,
 	}
@@ -495,7 +495,7 @@ func runPageFormFill(cmd *cobra.Command, args []string) error {
 	}
 
 	action := map[string]any{
-		"action": "form_fill",
+		"type": "form_fill",
 		"value":  formData,
 	}
 	return executePageAction(cmd, action)

@@ -308,8 +308,9 @@ func TestPageFormFill(t *testing.T) {
 	result := runCLIWithTimeout(t, 120*time.Second, "page", "goto", "https://httpbin.org/forms/post", "--id", sessionID)
 	requireSuccess(t, result)
 
-	// Fill form with JSON data
-	formData := `{"custname":"Test User","custtel":"555-1234","custemail":"test@example.com"}`
+	// Fill form with JSON data using valid field names from API schema
+	// Valid fields: first_name, last_name, email, phone, etc.
+	formData := `{"first_name":"Test","last_name":"User","email":"test@example.com","phone":"555-1234"}`
 	result = runCLIWithTimeout(t, 120*time.Second, "page", "form-fill", "--data", formData, "--id", sessionID)
 	requireSuccess(t, result)
 	t.Log("Successfully executed page form-fill")
