@@ -61,3 +61,19 @@ changelog:
       - Merge pull request
       - Merge branch
 
+brews:
+  - name: notte
+    repository:
+      owner: nottelabs
+      name: notte-cli
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+      branch: main
+    directory: Formula
+    homepage: "https://notte.cc"
+    description: "Browser automation CLI for notte.cc"
+    license: "MIT"
+    install: |
+      bin.install "notte"
+    test: |
+      system "#{bin}/notte", "version"
+

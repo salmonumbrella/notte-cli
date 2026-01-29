@@ -18,19 +18,19 @@ Control browser sessions, AI agents, and web scraping through intuitive resource
 ### Homebrew
 
 ```bash
-brew install salmonumbrella/tap/notte-cli
+brew install nottelabs/notte-cli/notte
 ```
 
 ### Go Install
 
 ```bash
-go install github.com/salmonumbrella/notte-cli/cmd/notte@latest
+go install github.com/nottelabs/notte-cli/cmd/notte@latest
 ```
 
 ### Build from Source
 
 ```bash
-git clone https://github.com/salmonumbrella/notte-cli.git
+git clone https://github.com/nottelabs/notte-cli.git
 cd notte-cli
 make build
 ```
@@ -113,18 +113,18 @@ notte auth status                    # Show authentication status
 ### Browser Sessions
 
 ```bash
-notte sessions list                  # List all active sessions
-notte sessions start [flags]         # Start a new session
-notte session status --id <id>       # Get session status
-notte session stop --id <id>         # Stop a session
-notte session observe --id <id>      # Watch session in real-time
-notte session execute --id <id>      # Execute browser actions
-notte session scrape --id <id>       # Scrape content from current page
-notte session cookies --id <id>      # Get all cookies
-notte session cookies-set --id <id>  # Set cookies from JSON file
-notte session network --id <id>      # View network activity logs
-notte session debug --id <id>        # Get debug information
-notte session replay --id <id>       # Get session replay data
+notte sessions list                   # List all active sessions
+notte sessions start [flags]          # Start a new session
+notte sessions status --id <id>       # Get session status
+notte sessions stop --id <id>         # Stop a session
+notte sessions observe --id <id>      # Watch session in real-time
+notte sessions execute --id <id>      # Execute browser actions
+notte sessions scrape --id <id>       # Scrape content from current page
+notte sessions cookies --id <id>      # Get all cookies
+notte sessions cookies-set --id <id>  # Set cookies from JSON file
+notte sessions network --id <id>      # View network activity logs
+notte sessions debug --id <id>        # Get debug information
+notte sessions replay --id <id>       # Get session replay data
 ```
 
 #### Session Start Options
@@ -145,54 +145,54 @@ notte sessions start \
 ### AI Agents
 
 ```bash
-notte agents list                    # List all AI agents
-notte agents start                   # Start a new AI agent
-notte agent status --id <id>         # Get agent status
-notte agent stop --id <id>           # Stop an agent
-notte agent workflow-code --id <id>  # Get agent's workflow code
-notte agent replay --id <id>         # Get agent execution replay
+notte agents list                     # List all AI agents
+notte agents start                    # Start a new AI agent
+notte agents status --id <id>         # Get agent status
+notte agents stop --id <id>           # Stop an agent
+notte agents workflow-code --id <id>  # Get agent's workflow code
+notte agents replay --id <id>         # Get agent execution replay
 ```
 
 ### Workflows
 
 ```bash
-notte workflows list                 # List all workflows
-notte workflows create               # Create a new workflow
-notte workflow show --id <id>        # View workflow details
-notte workflow update --id <id>      # Update workflow configuration
-notte workflow delete --id <id>      # Delete a workflow
-notte workflow fork --id <id>        # Fork workflow to new version
-notte workflow run --id <id>         # Execute workflow
-notte workflow runs --id <id>        # List workflow runs
-notte workflow run-stop --id <id>    # Stop a running workflow
-notte workflow schedule --id <id>    # Schedule recurring execution
-notte workflow unschedule --id <id>  # Remove schedule
+notte workflows list                  # List all workflows
+notte workflows create                # Create a new workflow
+notte workflows show --id <id>        # View workflow details
+notte workflows update --id <id>      # Update workflow configuration
+notte workflows delete --id <id>      # Delete a workflow
+notte workflows fork --id <id>        # Fork workflow to new version
+notte workflows run --id <id>         # Execute workflow
+notte workflows runs --id <id>        # List workflow runs
+notte workflows run-stop --id <id>    # Stop a running workflow
+notte workflows schedule --id <id>    # Schedule recurring execution
+notte workflows unschedule --id <id>  # Remove schedule
 ```
 
 ### Vaults
 
 ```bash
-notte vaults list                              # List all vaults
-notte vaults create                            # Create a new vault
-notte vault update --id <id>                   # Update vault metadata
-notte vault delete --id <id>                   # Delete a vault
-notte vault credentials list --id <id>         # List all credentials
-notte vault credentials add --id <id>          # Add credentials
-notte vault credentials get --id <id>          # Get credentials for URL
-notte vault credentials delete --id <id>       # Delete credentials
-notte vault card --id <id>                     # Manage payment cards
+notte vaults list                               # List all vaults
+notte vaults create                             # Create a new vault
+notte vaults update --id <id>                   # Update vault metadata
+notte vaults delete --id <id>                   # Delete a vault
+notte vaults credentials list --id <id>         # List all credentials
+notte vaults credentials add --id <id>          # Add credentials
+notte vaults credentials get --id <id>          # Get credentials for URL
+notte vaults credentials delete --id <id>       # Delete credentials
+notte vaults card --id <id>                     # Manage payment cards
 ```
 
 ### Personas
 
 ```bash
-notte personas list                  # List all personas
-notte personas create                # Create a new persona
-notte persona show --id <id>         # View persona details
-notte persona delete --id <id>       # Delete a persona
-notte persona emails --id <id>       # Manage email addresses
-notte persona sms --id <id>          # Manage SMS numbers
-notte persona phone --id <id>        # Manage phone numbers
+notte personas list                   # List all personas
+notte personas create                 # Create a new persona
+notte personas show --id <id>         # View persona details
+notte personas delete --id <id>       # Delete a persona
+notte personas emails --id <id>       # Manage email addresses
+notte personas sms --id <id>          # Manage SMS numbers
+notte personas phone --id <id>        # Manage phone numbers
 ```
 
 ### Files
@@ -273,16 +273,16 @@ Data goes to stdout, errors and progress to stderr for clean piping.
 SESSION_ID=$(notte sessions start --headless -o json | jq -r '.id')
 
 # Navigate to page (stdin also supported: --action @file.json or --action -)
-notte session execute --id $SESSION_ID << 'EOF'
+notte sessions execute --id $SESSION_ID << 'EOF'
 {"type": "goto", "url": "https://news.ycombinator.com"}
 EOF
 
 # Extract structured data
-notte session scrape --id $SESSION_ID \
+notte sessions scrape --id $SESSION_ID \
   --instructions "Extract top 10 stories with title and URL"
 
 # Cleanup
-notte session stop --id $SESSION_ID
+notte sessions stop --id $SESSION_ID
 ```
 
 ### Running a Workflow
@@ -292,7 +292,7 @@ notte session stop --id $SESSION_ID
 notte workflows list
 
 # Run workflow
-notte workflow run --id wfl_abc123
+notte workflows run --id wfl_abc123
 ```
 
 ### Managing Credentials Securely
@@ -302,13 +302,13 @@ notte workflow run --id wfl_abc123
 VAULT_ID=$(notte vaults create --name "Production Sites" -o json | jq -r '.id')
 
 # Add website credentials
-notte vault credentials add --id $VAULT_ID \
+notte vaults credentials add --id $VAULT_ID \
   --username "admin@example.com" \
   --password "$SECURE_PASSWORD" \
   --url "https://app.example.com"
 
 # List stored credentials
-notte vault credentials list --id $VAULT_ID
+notte vaults credentials list --id $VAULT_ID
 ```
 
 ### Multi-Step Browser Automation
@@ -323,15 +323,15 @@ SESSION_ID=$(notte sessions start \
   -o json | jq -r '.id')
 
 # Execute multiple actions
-notte session execute --id $SESSION_ID '{"type": "goto", "url": "https://example.com"}'
-notte session execute --id $SESSION_ID '{"type": "click", "selector": "#login-button"}'
-notte session execute --id $SESSION_ID '{"type": "form_fill", "selector": "#username", "text": "user@example.com"}'
+notte sessions execute --id $SESSION_ID '{"type": "goto", "url": "https://example.com"}'
+notte sessions execute --id $SESSION_ID '{"type": "click", "selector": "#login-button"}'
+notte sessions execute --id $SESSION_ID '{"type": "form_fill", "selector": "#username", "text": "user@example.com"}'
 
 # Get current page state
-notte session observe --id $SESSION_ID
+notte sessions observe --id $SESSION_ID
 
 # Stop when done
-notte session stop --id $SESSION_ID
+notte sessions stop --id $SESSION_ID
 ```
 
 ### JQ Filtering
@@ -352,7 +352,7 @@ For multi-line JSON payloads, use heredoc syntax:
 
 ```bash
 # Execute a complex action with heredoc
-notte session execute --id $SESSION_ID --action - << 'EOF'
+notte sessions execute --id $SESSION_ID --action - << 'EOF'
 {
   "action": "fill_form",
   "fields": [
@@ -364,7 +364,7 @@ notte session execute --id $SESSION_ID --action - << 'EOF'
 EOF
 
 # Update workflow metadata with heredoc
-notte workflow run-metadata-update --id $WORKFLOW_ID --run-id $RUN_ID --data - << 'EOF'
+notte workflows run-metadata-update --id $WORKFLOW_ID --run-id $RUN_ID --data - << 'EOF'
 {
   "status": "processing",
   "progress": 75,
