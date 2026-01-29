@@ -284,7 +284,10 @@ func (s *SetupServer) handleSuccess(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_ = tmpl.Execute(w, nil)
+	if err := tmpl.Execute(w, nil); err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (s *SetupServer) handleComplete(w http.ResponseWriter, r *http.Request) {
