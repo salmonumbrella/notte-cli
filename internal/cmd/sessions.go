@@ -141,13 +141,13 @@ var sessionsExecuteCmd = &cobra.Command{
 	Short: "Execute an action on the page",
 	Args:  cobra.NoArgs,
 	Example: `  # Direct JSON
-  notte sessions execute --id <session-id> --action '{"action": "click", "selector": "#btn"}'
+  notte sessions execute --id <session-id> --action '{"type": "goto", "url": "https://example.com"}'
 
   # From file
   notte sessions execute --id <session-id> --action @action.json
 
   # From stdin
-  echo '{"action": "click", "selector": "#btn"}' | notte sessions execute --id <session-id>`,
+  echo '{"type": "goto", "url": "https://example.com"}' | notte sessions execute --id <session-id>`,
 	RunE: runSessionExecute,
 }
 

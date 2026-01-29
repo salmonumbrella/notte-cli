@@ -274,7 +274,7 @@ SESSION_ID=$(notte sessions start --headless -o json | jq -r '.id')
 
 # Navigate to page (stdin also supported: --action @file.json or --action -)
 notte session execute --id $SESSION_ID << 'EOF'
-{"action": "goto", "url": "https://news.ycombinator.com"}
+{"type": "goto", "url": "https://news.ycombinator.com"}
 EOF
 
 # Extract structured data
@@ -323,9 +323,9 @@ SESSION_ID=$(notte sessions start \
   -o json | jq -r '.id')
 
 # Execute multiple actions
-notte session execute --id $SESSION_ID '{"action": "goto", "url": "https://example.com"}'
-notte session execute --id $SESSION_ID '{"action": "click", "selector": "#login-button"}'
-notte session execute --id $SESSION_ID '{"action": "type", "selector": "#username", "text": "user@example.com"}'
+notte session execute --id $SESSION_ID '{"type": "goto", "url": "https://example.com"}'
+notte session execute --id $SESSION_ID '{"type": "click", "selector": "#login-button"}'
+notte session execute --id $SESSION_ID '{"type": "form_fill", "selector": "#username", "text": "user@example.com"}'
 
 # Get current page state
 notte session observe --id $SESSION_ID

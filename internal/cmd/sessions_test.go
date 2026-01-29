@@ -379,7 +379,7 @@ func TestRunSessionExecute(t *testing.T) {
 	server.AddResponse("/sessions/"+sessionIDTest+"/page/execute", 200, execResp)
 
 	origAction := sessionExecuteAction
-	sessionExecuteAction = `{"action":"noop"}`
+	sessionExecuteAction = `{"type":"noop"}`
 	t.Cleanup(func() { sessionExecuteAction = origAction })
 
 	origFormat := outputFormat

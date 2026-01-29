@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func TestEnvObserve(t *testing.T) {
+func TestPageObserve(t *testing.T) {
 	// Start a session first
 	result := runCLI(t, "sessions", "start", "--headless")
 	requireSuccess(t, result)
@@ -40,7 +40,7 @@ func TestEnvObserve(t *testing.T) {
 	requireSuccess(t, result)
 }
 
-func TestEnvExecuteAction(t *testing.T) {
+func TestPageExecuteAction(t *testing.T) {
 	// Start a session
 	result := runCLI(t, "sessions", "start", "--headless")
 	requireSuccess(t, result)
@@ -62,7 +62,7 @@ func TestEnvExecuteAction(t *testing.T) {
 	requireSuccess(t, result)
 
 	// Execute a simple goto action
-	actionJSON := `{"action":"goto","params":{"url":"https://example.org"}}`
+	actionJSON := `{"type":"goto","url":"https://example.org"}`
 	result = runCLIWithTimeout(t, 120*time.Second, "sessions", "execute", "--id", sessionID, "--action", actionJSON)
 	requireSuccess(t, result)
 	t.Log("Successfully executed action")
@@ -72,7 +72,7 @@ func TestEnvExecuteAction(t *testing.T) {
 	requireSuccess(t, result)
 }
 
-func TestEnvScrapeBasic(t *testing.T) {
+func TestPageScrapeBasic(t *testing.T) {
 	// Start a session
 	result := runCLI(t, "sessions", "start", "--headless")
 	requireSuccess(t, result)
@@ -108,7 +108,7 @@ func TestEnvScrapeBasic(t *testing.T) {
 	requireSuccess(t, result)
 }
 
-func TestEnvScrapeWithInstructions(t *testing.T) {
+func TestPageScrapeWithInstructions(t *testing.T) {
 	// Start a session
 	result := runCLI(t, "sessions", "start", "--headless")
 	requireSuccess(t, result)
@@ -139,7 +139,7 @@ func TestEnvScrapeWithInstructions(t *testing.T) {
 	requireSuccess(t, result)
 }
 
-func TestEnvScrapeOnlyMainContent(t *testing.T) {
+func TestPageScrapeOnlyMainContent(t *testing.T) {
 	// Start a session
 	result := runCLI(t, "sessions", "start", "--headless")
 	requireSuccess(t, result)
@@ -170,7 +170,7 @@ func TestEnvScrapeOnlyMainContent(t *testing.T) {
 	requireSuccess(t, result)
 }
 
-func TestEnvObserveExecuteScrapeFlow(t *testing.T) {
+func TestPageObserveExecuteScrapeFlow(t *testing.T) {
 	// Start a session
 	result := runCLI(t, "sessions", "start", "--headless")
 	requireSuccess(t, result)
@@ -193,7 +193,7 @@ func TestEnvObserveExecuteScrapeFlow(t *testing.T) {
 	t.Log("Step 1: Observed initial page")
 
 	// Step 2: Execute navigation
-	actionJSON := `{"action":"goto","params":{"url":"https://example.org"}}`
+	actionJSON := `{"type":"goto","url":"https://example.org"}`
 	result = runCLIWithTimeout(t, 120*time.Second, "sessions", "execute", "--id", sessionID, "--action", actionJSON)
 	requireSuccess(t, result)
 	t.Log("Step 2: Executed navigation")
