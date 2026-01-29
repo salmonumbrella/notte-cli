@@ -41,8 +41,8 @@ func TestStorageUploadAndList(t *testing.T) {
 }
 
 func TestStorageDownloadFromSession(t *testing.T) {
-	// Start a session first
-	result := runCLI(t, "sessions", "start", "--headless")
+	// Start a session with file storage enabled
+	result := runCLI(t, "sessions", "start", "--headless", "--file-storage")
 	requireSuccess(t, result)
 
 	var startResp struct {
@@ -61,10 +61,6 @@ func TestStorageDownloadFromSession(t *testing.T) {
 	result = runCLI(t, "files", "list", "--downloads", "--id", sessionID)
 	requireSuccess(t, result)
 	t.Log("Successfully listed session downloads")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestStorageListDownloadsRequiresSession(t *testing.T) {
@@ -75,8 +71,8 @@ func TestStorageListDownloadsRequiresSession(t *testing.T) {
 }
 
 func TestStorageDownloadNonexistent(t *testing.T) {
-	// Start a session
-	result := runCLI(t, "sessions", "start", "--headless")
+	// Start a session with file storage enabled
+	result := runCLI(t, "sessions", "start", "--headless", "--file-storage")
 	requireSuccess(t, result)
 
 	var startResp struct {
@@ -92,10 +88,6 @@ func TestStorageDownloadNonexistent(t *testing.T) {
 	result = runCLI(t, "files", "download", "nonexistent-file-12345.txt", "--id", sessionID)
 	requireFailure(t, result)
 	t.Log("Correctly failed to download non-existent file")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestStorageUploadLargeFile(t *testing.T) {
