@@ -121,7 +121,10 @@ func (s *SetupServer) handleSetup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_ = tmpl.Execute(w, data)
+	if err := tmpl.Execute(w, data); err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetConsoleAuthURL builds the console authentication URL with callback and state
