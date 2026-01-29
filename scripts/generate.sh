@@ -112,6 +112,11 @@ sed -i '' 's/^func NewClient(/func newGeneratedClient(/g' "$OUTPUT_DIR/client.ge
 # Also update the call to NewClient within NewClientWithResponses
 sed -i '' 's/NewClient(server, opts\.\.\.)/newGeneratedClient(server, opts...)/g' "$OUTPUT_DIR/client.gen.go"
 
+# Replace time.Time with FlexibleTime in struct fields for flexible timestamp parsing
+# This handles API responses that don't include timezone info
+sed -i '' 's/\(	[A-Za-z]*\) time\.Time /\1 FlexibleTime /g' "$OUTPUT_DIR/client.gen.go"
+sed -i '' 's/\(	[A-Za-z]*\) \*time\.Time /\1 *FlexibleTime /g' "$OUTPUT_DIR/client.gen.go"
+
 # Format the fixed code
 gofmt -w "$OUTPUT_DIR/client.gen.go"
 

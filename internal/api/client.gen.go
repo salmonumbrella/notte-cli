@@ -478,7 +478,7 @@ type AgentResponse struct {
 	ClosedAt *string `json:"closed_at"`
 
 	// CreatedAt The creation time of the agent
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// CreditUsage Credit usage for the agent. None if the agent is still running
 	CreditUsage *float32 `json:"credit_usage"`
@@ -506,7 +506,7 @@ type AgentStatusResponse struct {
 	ClosedAt *string `json:"closed_at"`
 
 	// CreatedAt The creation time of the agent
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// CreditUsage Credit usage for the agent. None if the agent is still running
 	CreditUsage *float32 `json:"credit_usage"`
@@ -1040,7 +1040,7 @@ type EmailReadAction struct {
 // EmailResponse defines model for EmailResponse.
 type EmailResponse struct {
 	// CreatedAt Creation date
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// EmailId Email UUID
 	EmailId string `json:"email_id"`
@@ -1300,7 +1300,7 @@ type GetCreditCardResponse struct {
 // GetFunctionResponse defines model for GetFunctionResponse.
 type GetFunctionResponse struct {
 	// CreatedAt The creation time of the workflow
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// Description The description of the workflow
 	Description *string `json:"description"`
@@ -1324,7 +1324,7 @@ type GetFunctionResponse struct {
 	Status string `json:"status"`
 
 	// UpdatedAt The last update time of the workflow
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt FlexibleTime `json:"updated_at"`
 
 	// Variables The variables to run the workflow with
 	Variables *[]interface{} `json:"variables"`
@@ -1336,7 +1336,7 @@ type GetFunctionResponse struct {
 
 // GetFunctionRunResponse defines model for GetFunctionRunResponse.
 type GetFunctionRunResponse struct {
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// FunctionId The ID of the function
 	FunctionId string `json:"function_id"`
@@ -1356,7 +1356,7 @@ type GetFunctionRunResponse struct {
 	// SessionId The ID of the session
 	SessionId *string                      `json:"session_id"`
 	Status    GetFunctionRunResponseStatus `json:"status"`
-	UpdatedAt time.Time                    `json:"updated_at"`
+	UpdatedAt FlexibleTime                 `json:"updated_at"`
 
 	// Variables The variables of the workflow run
 	Variables     *map[string]interface{} `json:"variables"`
@@ -1370,7 +1370,7 @@ type GetFunctionRunResponseStatus string
 // GetFunctionWithLinkResponse defines model for GetFunctionWithLinkResponse.
 type GetFunctionWithLinkResponse struct {
 	// CreatedAt The creation time of the workflow
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// Description The description of the workflow
 	Description *string `json:"description"`
@@ -1394,7 +1394,7 @@ type GetFunctionWithLinkResponse struct {
 	Status string `json:"status"`
 
 	// UpdatedAt The last update time of the workflow
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt FlexibleTime `json:"updated_at"`
 
 	// Url URL to download file from
 	Url string `json:"url"`
@@ -1590,7 +1590,7 @@ type LegacyAgentStatusResponse struct {
 	ClosedAt *string `json:"closed_at"`
 
 	// CreatedAt The creation time of the agent
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// CreditUsage Credit usage for the agent. None if the agent is still running
 	CreditUsage *float32 `json:"credit_usage"`
@@ -1919,7 +1919,7 @@ type ProfileDeleteResponse struct {
 // ProfileResponse defines model for ProfileResponse.
 type ProfileResponse struct {
 	// CreatedAt Profile creation timestamp
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// Name Profile name
 	Name *string `json:"name"`
@@ -1928,7 +1928,7 @@ type ProfileResponse struct {
 	ProfileId string `json:"profile_id"`
 
 	// UpdatedAt Profile last update timestamp
-	UpdatedAt time.Time `json:"updated_at"`
+	UpdatedAt FlexibleTime `json:"updated_at"`
 }
 
 // ProxyGeolocationCountry defines model for ProxyGeolocationCountry.
@@ -1958,7 +1958,7 @@ type SMSResponse struct {
 	Body string `json:"body"`
 
 	// CreatedAt Creation date
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// Sender SMS sender phone number
 	Sender *string `json:"sender"`
@@ -2204,7 +2204,7 @@ type SessionResponse struct {
 	ClosedAt *string `json:"closed_at"`
 
 	// CreatedAt Session creation time
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt FlexibleTime `json:"created_at"`
 
 	// CreditUsage Credit usage for the session. None
 	CreditUsage *float32 `json:"credit_usage"`
@@ -2222,7 +2222,7 @@ type SessionResponse struct {
 	IdleTimeoutMinutes int `json:"idle_timeout_minutes"`
 
 	// LastAccessedAt Last access time
-	LastAccessedAt time.Time `json:"last_accessed_at"`
+	LastAccessedAt FlexibleTime `json:"last_accessed_at"`
 
 	// MaxDurationMinutes Session max duration in minutes. Will timeout if now() > creation time + max_duration_minutes
 	MaxDurationMinutes *int `json:"max_duration_minutes,omitempty"`
@@ -2287,11 +2287,11 @@ type SmsReadAction struct {
 
 // SnapshotMetadata defines model for SnapshotMetadata.
 type SnapshotMetadata struct {
-	Tabs      []TabsData   `json:"tabs"`
-	Timestamp *time.Time   `json:"timestamp,omitempty"`
-	Title     string       `json:"title"`
-	Url       string       `json:"url"`
-	Viewport  ViewportData `json:"viewport"`
+	Tabs      []TabsData    `json:"tabs"`
+	Timestamp *FlexibleTime `json:"timestamp,omitempty"`
+	Title     string        `json:"title"`
+	Url       string        `json:"url"`
+	Viewport  ViewportData  `json:"viewport"`
 }
 
 // SpaceCategory defines model for SpaceCategory.
@@ -3059,12 +3059,6 @@ type PersonaCreateJSONRequestBody = PersonaCreateRequest
 
 // ProfileCreateJSONRequestBody defines body for ProfileCreate for application/json ContentType.
 type ProfileCreateJSONRequestBody = ProfileCreateRequest
-
-// ImprovePromptJSONRequestBody defines body for ImprovePrompt for application/json ContentType.
-type ImprovePromptJSONRequestBody = ImprovePromptRequest
-
-// NudgePromptJSONRequestBody defines body for NudgePrompt for application/json ContentType.
-type NudgePromptJSONRequestBody = NudgePromptRequest
 
 // ScrapeWebpageJSONRequestBody defines body for ScrapeWebpage for application/json ContentType.
 type ScrapeWebpageJSONRequestBody = GlobalScrapeRequest
@@ -8066,16 +8060,6 @@ type ClientInterface interface {
 	// ProfileGet request
 	ProfileGet(ctx context.Context, profileId string, params *ProfileGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// ImprovePromptWithBody request with any body
-	ImprovePromptWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	ImprovePrompt(ctx context.Context, body ImprovePromptJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// NudgePromptWithBody request with any body
-	NudgePromptWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	NudgePrompt(ctx context.Context, body NudgePromptJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// ScrapeWebpageWithBody request with any body
 	ScrapeWebpageWithBody(ctx context.Context, params *ScrapeWebpageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -8635,54 +8619,6 @@ func (c *Client) ProfileDelete(ctx context.Context, profileId string, params *Pr
 
 func (c *Client) ProfileGet(ctx context.Context, profileId string, params *ProfileGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewProfileGetRequest(c.Server, profileId, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) ImprovePromptWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewImprovePromptRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) ImprovePrompt(ctx context.Context, body ImprovePromptJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewImprovePromptRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) NudgePromptWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewNudgePromptRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) NudgePrompt(ctx context.Context, body NudgePromptJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewNudgePromptRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -11755,86 +11691,6 @@ func NewProfileGetRequest(server string, profileId string, params *ProfileGetPar
 	return req, nil
 }
 
-// NewImprovePromptRequest calls the generic ImprovePrompt builder with application/json body
-func NewImprovePromptRequest(server string, body ImprovePromptJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewImprovePromptRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewImprovePromptRequestWithBody generates requests for ImprovePrompt with any type of body
-func NewImprovePromptRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/prompts/improve")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewNudgePromptRequest calls the generic NudgePrompt builder with application/json body
-func NewNudgePromptRequest(server string, body NudgePromptJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewNudgePromptRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewNudgePromptRequestWithBody generates requests for NudgePrompt with any type of body
-func NewNudgePromptRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/prompts/nudge")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
 // NewScrapeWebpageRequest calls the generic ScrapeWebpage builder with application/json body
 func NewScrapeWebpageRequest(server string, params *ScrapeWebpageParams, body ScrapeWebpageJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -14462,16 +14318,6 @@ type ClientWithResponsesInterface interface {
 	// ProfileGetWithResponse request
 	ProfileGetWithResponse(ctx context.Context, profileId string, params *ProfileGetParams, reqEditors ...RequestEditorFn) (*ProfileGetResult, error)
 
-	// ImprovePromptWithBodyWithResponse request with any body
-	ImprovePromptWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImprovePromptResult, error)
-
-	ImprovePromptWithResponse(ctx context.Context, body ImprovePromptJSONRequestBody, reqEditors ...RequestEditorFn) (*ImprovePromptResult, error)
-
-	// NudgePromptWithBodyWithResponse request with any body
-	NudgePromptWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NudgePromptResult, error)
-
-	NudgePromptWithResponse(ctx context.Context, body NudgePromptJSONRequestBody, reqEditors ...RequestEditorFn) (*NudgePromptResult, error)
-
 	// ScrapeWebpageWithBodyWithResponse request with any body
 	ScrapeWebpageWithBodyWithResponse(ctx context.Context, params *ScrapeWebpageParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ScrapeWebpageResult, error)
 
@@ -15325,52 +15171,6 @@ func (r ProfileGetResult) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ProfileGetResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type ImprovePromptResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *ImprovePromptResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r ImprovePromptResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ImprovePromptResult) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type NudgePromptResult struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *NudgePromptResponse
-	JSON422      *HTTPValidationError
-}
-
-// Status returns HTTPResponse.Status
-func (r NudgePromptResult) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r NudgePromptResult) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -16486,40 +16286,6 @@ func (c *ClientWithResponses) ProfileGetWithResponse(ctx context.Context, profil
 		return nil, err
 	}
 	return ParseProfileGetResult(rsp)
-}
-
-// ImprovePromptWithBodyWithResponse request with arbitrary body returning *ImprovePromptResult
-func (c *ClientWithResponses) ImprovePromptWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImprovePromptResult, error) {
-	rsp, err := c.ImprovePromptWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseImprovePromptResult(rsp)
-}
-
-func (c *ClientWithResponses) ImprovePromptWithResponse(ctx context.Context, body ImprovePromptJSONRequestBody, reqEditors ...RequestEditorFn) (*ImprovePromptResult, error) {
-	rsp, err := c.ImprovePrompt(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseImprovePromptResult(rsp)
-}
-
-// NudgePromptWithBodyWithResponse request with arbitrary body returning *NudgePromptResult
-func (c *ClientWithResponses) NudgePromptWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*NudgePromptResult, error) {
-	rsp, err := c.NudgePromptWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseNudgePromptResult(rsp)
-}
-
-func (c *ClientWithResponses) NudgePromptWithResponse(ctx context.Context, body NudgePromptJSONRequestBody, reqEditors ...RequestEditorFn) (*NudgePromptResult, error) {
-	rsp, err := c.NudgePrompt(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseNudgePromptResult(rsp)
 }
 
 // ScrapeWebpageWithBodyWithResponse request with arbitrary body returning *ScrapeWebpageResult
@@ -17941,72 +17707,6 @@ func ParseProfileGetResult(rsp *http.Response) (*ProfileGetResult, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest ProfileResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseImprovePromptResult parses an HTTP response from a ImprovePromptWithResponse call
-func ParseImprovePromptResult(rsp *http.Response) (*ImprovePromptResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ImprovePromptResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ImprovePromptResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
-		var dest HTTPValidationError
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON422 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseNudgePromptResult parses an HTTP response from a NudgePromptWithResponse call
-func ParseNudgePromptResult(rsp *http.Response) (*NudgePromptResult, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &NudgePromptResult{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest NudgePromptResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
