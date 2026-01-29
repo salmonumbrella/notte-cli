@@ -1012,6 +1012,60 @@ func TestSessionStop_ClearsCurrentSession(t *testing.T) {
 	}
 }
 
+func TestSessionStop_DifferentSession_DoesNotClearCurrentSession(t *testing.T) {
+	env := testutil.SetupTestEnv(t)
+	env.SetEnv("NOTTE_API_KEY", "test-key")
+
+	server := testutil.NewMockServer()
+	defer server.Close()
+	env.SetEnv("NOTTE_API_URL", server.URL())
+
+	tmpDir := setupSessionFileTest(t)
+
+	// Create session file with "sess_current"
+	configDir := filepath.Join(tmpDir, config.ConfigDirName)
+	if err := os.MkdirAll(configDir, 0o700); err != nil {
+		t.Fatalf("failed to create config dir: %v", err)
+	}
+	sessionFile := filepath.Join(configDir, config.CurrentSessionFile)
+	if err := os.WriteFile(sessionFile, []byte("sess_current"), 0o600); err != nil {
+		t.Fatalf("failed to write session file: %v", err)
+	}
+
+	// Stop a different session "sess_different"
+	server.AddResponse("/sessions/sess_different/stop", 200, `{"session_id":"sess_different","status":"STOPPED"}`)
+
+	origID := sessionID
+	sessionID = "sess_different"
+	t.Cleanup(func() { sessionID = origID })
+
+	SetSkipConfirmation(true)
+	t.Cleanup(func() { SetSkipConfirmation(false) })
+
+	origFormat := outputFormat
+	outputFormat = "text"
+	t.Cleanup(func() { outputFormat = origFormat })
+
+	cmd := &cobra.Command{}
+	cmd.SetContext(context.Background())
+
+	testutil.CaptureOutput(func() {
+		err := runSessionStop(cmd, nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	// Verify session file still contains "sess_current"
+	data, err := os.ReadFile(sessionFile)
+	if err != nil {
+		t.Fatalf("session file should still exist: %v", err)
+	}
+	if strings.TrimSpace(string(data)) != "sess_current" {
+		t.Errorf("session file content = %q, want %q", string(data), "sess_current")
+	}
+}
+
 func TestSessionStatus_UsesCurrentSession(t *testing.T) {
 	env := testutil.SetupTestEnv(t)
 	env.SetEnv("NOTTE_API_KEY", "test-key")
