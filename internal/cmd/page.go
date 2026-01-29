@@ -14,8 +14,6 @@ import (
 
 // Page command flags
 var (
-	pageSessionID string
-
 	// click flags
 	pageClickTimeout int
 	pageClickEnter   bool
@@ -528,7 +526,7 @@ func init() {
 	pageCmd.AddCommand(pageFormFillCmd)
 
 	// Add --id flag to parent command (inherited by all subcommands)
-	pageCmd.PersistentFlags().StringVar(&pageSessionID, "id", "", "Session ID (uses current session if not specified)")
+	pageCmd.PersistentFlags().StringVar(&sessionID, "id", "", "Session ID (uses current session if not specified)")
 
 	// click flags
 	pageClickCmd.Flags().IntVar(&pageClickTimeout, "timeout", 0, "Timeout in milliseconds")
