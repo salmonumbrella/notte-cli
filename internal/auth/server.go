@@ -306,9 +306,12 @@ func (s *SetupServer) handleCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_ = tmpl.Execute(w, map[string]string{
+		if err := tmpl.Execute(w, map[string]string{
 			"ExpectedState": s.oauthState,
-		})
+		}); err != nil {
+			http.Error(w, "Internal error", http.StatusInternalServerError)
+			return
+		}
 
 	case http.MethodPost:
 		// Receive token from the fragment extractor page
