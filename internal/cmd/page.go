@@ -38,14 +38,21 @@ var (
 	pageFormFillData string
 )
 
-// parseSelector returns (id, selector) based on @ prefix
+// parseSelector returns (id, selector, error) based on @ prefix
 // @B3 -> element ID (id: "B3")
 // #btn or any other string -> CSS selector (selector: "#btn")
-func parseSelector(arg string) (string, string) {
-	if strings.HasPrefix(arg, "@") {
-		return strings.TrimPrefix(arg, "@"), ""
+func parseSelector(arg string) (string, string, error) {
+	if arg == "" {
+		return "", "", fmt.Errorf("selector cannot be empty")
 	}
-	return "", arg
+	if strings.HasPrefix(arg, "@") {
+		id := strings.TrimPrefix(arg, "@")
+		if id == "" {
+			return "", "", fmt.Errorf("element ID cannot be empty (use @id format)")
+		}
+		return id, "", nil
+	}
+	return "", arg, nil
 }
 
 // executePageAction builds JSON and calls the PageExecute API
@@ -107,7 +114,10 @@ var pageClickCmd = &cobra.Command{
 func runPageClick(cmd *cobra.Command, args []string) error {
 	action := map[string]any{"type": "click"}
 
-	id, selector := parseSelector(args[0])
+	id, selector, err := parseSelector(args[0])
+	if err != nil {
+		return err
+	}
 	if id != "" {
 		action["id"] = id
 	} else {
@@ -134,7 +144,10 @@ var pageFillCmd = &cobra.Command{
 func runPageFill(cmd *cobra.Command, args []string) error {
 	action := map[string]any{"type": "fill"}
 
-	id, selector := parseSelector(args[0])
+	id, selector, err := parseSelector(args[0])
+	if err != nil {
+		return err
+	}
 	if id != "" {
 		action["id"] = id
 	} else {
@@ -163,7 +176,10 @@ var pageCheckCmd = &cobra.Command{
 func runPageCheck(cmd *cobra.Command, args []string) error {
 	action := map[string]any{"type": "check"}
 
-	id, selector := parseSelector(args[0])
+	id, selector, err := parseSelector(args[0])
+	if err != nil {
+		return err
+	}
 	if id != "" {
 		action["id"] = id
 	} else {
@@ -185,7 +201,10 @@ var pageSelectCmd = &cobra.Command{
 func runPageSelect(cmd *cobra.Command, args []string) error {
 	action := map[string]any{"type": "select_dropdown_option"}
 
-	id, selector := parseSelector(args[0])
+	id, selector, err := parseSelector(args[0])
+	if err != nil {
+		return err
+	}
 	if id != "" {
 		action["id"] = id
 	} else {
@@ -207,7 +226,10 @@ var pageDownloadCmd = &cobra.Command{
 func runPageDownload(cmd *cobra.Command, args []string) error {
 	action := map[string]any{"type": "download_file"}
 
-	id, selector := parseSelector(args[0])
+	id, selector, err := parseSelector(args[0])
+	if err != nil {
+		return err
+	}
 	if id != "" {
 		action["id"] = id
 	} else {
@@ -227,7 +249,10 @@ var pageUploadCmd = &cobra.Command{
 func runPageUpload(cmd *cobra.Command, args []string) error {
 	action := map[string]any{"type": "upload_file"}
 
-	id, selector := parseSelector(args[0])
+	id, selector, err := parseSelector(args[0])
+	if err != nil {
+		return err
+	}
 	if id != "" {
 		action["id"] = id
 	} else {

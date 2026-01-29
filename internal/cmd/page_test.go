@@ -42,18 +42,27 @@ func TestParseSelector(t *testing.T) {
 		input        string
 		wantID       string
 		wantSelector string
+		wantErr      bool
 	}{
-		{"@B3", "B3", ""},
-		{"@submit-btn", "submit-btn", ""},
-		{"#btn", "", "#btn"},
-		{".class", "", ".class"},
-		{"button[type=submit]", "", "button[type=submit]"},
-		{"@", "", ""},  // edge case: @ with nothing after
+		{"@B3", "B3", "", false},
+		{"@submit-btn", "submit-btn", "", false},
+		{"#btn", "", "#btn", false},
+		{".class", "", ".class", false},
+		{"button[type=submit]", "", "button[type=submit]", false},
+		{"@", "", "", true},  // edge case: @ with nothing after
+		{"", "", "", true},   // empty string
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			id, selector := parseSelector(tt.input)
+			id, selector, err := parseSelector(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseSelector(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+				return
+			}
+			if err != nil {
+				return
+			}
 			if id != tt.wantID {
 				t.Errorf("parseSelector(%q) id = %q, want %q", tt.input, id, tt.wantID)
 			}
