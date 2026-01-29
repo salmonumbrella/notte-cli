@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os/exec"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/salmonumbrella/notte-cli/internal/api"
@@ -29,6 +30,7 @@ type SetupServer struct {
 	result        chan SetupResult
 	shutdown      chan struct{}
 	pendingResult *SetupResult
+	mu            sync.Mutex
 	csrfToken     string
 	oauthState    string
 	baseURL       string
@@ -91,8 +93,11 @@ func (s *SetupServer) Start(ctx context.Context) (*SetupResult, error) {
 		return nil, ctx.Err()
 	case <-s.shutdown:
 		_ = server.Shutdown(context.Background())
-		if s.pendingResult != nil {
-			return s.pendingResult, nil
+		s.mu.Lock()
+		result := s.pendingResult
+		s.mu.Unlock()
+		if result != nil {
+			return result, nil
 		}
 		return nil, fmt.Errorf("setup cancelled")
 	}
@@ -257,9 +262,11 @@ func (s *SetupServer) handleSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.mu.Lock()
 	s.pendingResult = &SetupResult{
 		APIKey: req.APIKey,
 	}
+	s.mu.Unlock()
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"success": true,
@@ -278,8 +285,11 @@ func (s *SetupServer) handleSuccess(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *SetupServer) handleComplete(w http.ResponseWriter, r *http.Request) {
-	if s.pendingResult != nil {
-		s.result <- *s.pendingResult
+	s.mu.Lock()
+	result := s.pendingResult
+	s.mu.Unlock()
+	if result != nil {
+		s.result <- *result
 	}
 	close(s.shutdown)
 	writeJSON(w, http.StatusOK, map[string]any{"success": true})
@@ -372,9 +382,11 @@ func (s *SetupServer) handleCallback(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Set pending result
+		s.mu.Lock()
 		s.pendingResult = &SetupResult{
 			APIKey: req.Token,
 		}
+		s.mu.Unlock()
 
 		writeJSON(w, http.StatusOK, map[string]any{
 			"success": true,
