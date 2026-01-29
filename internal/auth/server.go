@@ -10,8 +10,10 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -132,10 +134,39 @@ func (s *SetupServer) handleSetup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ValidateConsoleURL validates the console URL and returns an error if invalid.
+// It warns to stderr if a non-default URL is used and rejects HTTP URLs.
+func ValidateConsoleURL(consoleURL string) error {
+	parsed, err := url.Parse(consoleURL)
+	if err != nil {
+		return fmt.Errorf("invalid console URL %q: %w", consoleURL, err)
+	}
+
+	// Reject non-HTTPS URLs (HTTP could expose credentials)
+	if strings.ToLower(parsed.Scheme) != "https" {
+		return fmt.Errorf("console URL must use HTTPS, got %q", consoleURL)
+	}
+
+	// Warn if using a non-default URL (potential phishing risk)
+	if consoleURL != config.DefaultConsoleURL {
+		fmt.Fprintf(os.Stderr, "Warning: Using non-default console URL: %s\n", consoleURL)
+		fmt.Fprintf(os.Stderr, "         Verify this is a trusted Notte endpoint before proceeding.\n")
+	}
+
+	return nil
+}
+
 // GetConsoleAuthURL builds the console authentication URL with callback and state
 func (s *SetupServer) GetConsoleAuthURL() string {
 	consoleURL := config.GetConsoleURL()
 	callbackURL := s.baseURL + "/callback"
+
+	// Validate the console URL before using it
+	if err := ValidateConsoleURL(consoleURL); err != nil {
+		// Log error to stderr and fall back to manual key page on default URL
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		return config.DefaultConsoleURL + "/apikeys"
+	}
 
 	authURL, err := url.Parse(consoleURL + "/auth/cli")
 	if err != nil {
