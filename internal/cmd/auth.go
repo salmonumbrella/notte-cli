@@ -51,7 +51,10 @@ func init() {
 func runAuthLogin(cmd *cobra.Command, args []string) error {
 	PrintInfo("Opening browser for authentication...")
 
-	server := auth.NewSetupServer()
+	server, err := auth.NewSetupServer()
+	if err != nil {
+		return fmt.Errorf("failed to initialize auth server: %w", err)
+	}
 
 	ctx, cancel := context.WithTimeout(cmd.Context(), 5*time.Minute)
 	defer cancel()

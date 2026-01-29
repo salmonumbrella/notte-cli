@@ -37,19 +37,23 @@ type SetupServer struct {
 }
 
 // NewSetupServer creates a new setup server
-func NewSetupServer() *SetupServer {
+func NewSetupServer() (*SetupServer, error) {
 	csrfBytes := make([]byte, 32)
-	_, _ = rand.Read(csrfBytes)
+	if _, err := rand.Read(csrfBytes); err != nil {
+		return nil, fmt.Errorf("failed to generate CSRF token: %w", err)
+	}
 
 	stateBytes := make([]byte, 32)
-	_, _ = rand.Read(stateBytes)
+	if _, err := rand.Read(stateBytes); err != nil {
+		return nil, fmt.Errorf("failed to generate OAuth state: %w", err)
+	}
 
 	return &SetupServer{
 		result:     make(chan SetupResult, 1),
 		shutdown:   make(chan struct{}),
 		csrfToken:  hex.EncodeToString(csrfBytes),
 		oauthState: hex.EncodeToString(stateBytes),
-	}
+	}, nil
 }
 
 // Start starts the setup server and opens the browser
