@@ -52,14 +52,12 @@ func TestAgentsStartWithSession(t *testing.T) {
 	}
 	t.Logf("Started agent on session: %s", agentID)
 
-	defer cleanupAgent(t, agentID)
+	// Note: We don't need to cleanup the agent separately since
+	// cleanupSession will stop the session which implicitly stops the agent
 
 	// Get agent status
 	result = runCLI(t, "agents", "status", "--id", agentID)
 	requireSuccess(t, result)
-
-	// Stop agent
-	result = runCLI(t, "agents", "stop", "--id", agentID)
 	t.Log("Agent on session test completed")
 }
 

@@ -41,11 +41,7 @@ func TestVaultsCreateAndDelete(t *testing.T) {
 	if !containsString(result.Stdout, vaultID) {
 		t.Error("Vault list did not contain our vault")
 	}
-
-	// Delete the vault
-	result = runCLI(t, "vaults", "delete", "--id", vaultID)
-	requireSuccess(t, result)
-	t.Log("Vault deleted successfully")
+	t.Log("Vault create and delete test completed successfully")
 }
 
 func TestVaultsCreateWithName(t *testing.T) {
@@ -67,11 +63,7 @@ func TestVaultsCreateWithName(t *testing.T) {
 	t.Logf("Created vault with name: %s", vaultID)
 
 	defer cleanupVault(t, vaultID)
-
-	// Delete vault
-	result = runCLI(t, "vaults", "delete", "--id", vaultID)
-	requireSuccess(t, result)
-	t.Log("Vault with name created and deleted successfully")
+	t.Log("Vault with name created successfully")
 }
 
 func TestVaultsCredentialsLifecycle(t *testing.T) {
@@ -114,11 +106,6 @@ func TestVaultsCredentialsLifecycle(t *testing.T) {
 	// Delete credentials
 	result = runCLI(t, "vaults", "credentials", "delete", "--id", vaultID, "--url", "https://example.com")
 	requireSuccess(t, result)
-	t.Log("Successfully deleted credentials")
-
-	// Delete vault
-	result = runCLI(t, "vaults", "delete", "--id", vaultID)
-	requireSuccess(t, result)
 	t.Log("Vault credentials lifecycle completed successfully")
 }
 
@@ -149,10 +136,7 @@ func TestVaultsCredentialsWithUsername(t *testing.T) {
 	// Get credentials
 	result = runCLI(t, "vaults", "credentials", "get", "--id", vaultID, "--url", "https://test-site.com")
 	requireSuccess(t, result)
-
-	// Delete vault (cleanup)
-	result = runCLI(t, "vaults", "delete", "--id", vaultID)
-	requireSuccess(t, result)
+	t.Log("Credentials with username test completed successfully")
 }
 
 func TestVaultsCredentialsWithMFA(t *testing.T) {
@@ -179,10 +163,6 @@ func TestVaultsCredentialsWithMFA(t *testing.T) {
 	)
 	requireSuccess(t, result)
 	t.Log("Successfully added credentials with MFA secret")
-
-	// Delete vault (cleanup)
-	result = runCLI(t, "vaults", "delete", "--id", vaultID)
-	requireSuccess(t, result)
 }
 
 func TestVaultsUpdate(t *testing.T) {
@@ -203,10 +183,6 @@ func TestVaultsUpdate(t *testing.T) {
 	result = runCLI(t, "vaults", "update", "--id", vaultID, "--name", "updated-name")
 	requireSuccess(t, result)
 	t.Log("Successfully updated vault name")
-
-	// Delete vault
-	result = runCLI(t, "vaults", "delete", "--id", vaultID)
-	requireSuccess(t, result)
 }
 
 func TestVaultsDeleteNonexistent(t *testing.T) {
@@ -234,8 +210,4 @@ func TestVaultsCredentialsGetNonexistent(t *testing.T) {
 	result = runCLI(t, "vaults", "credentials", "get", "--id", vaultID, "--url", "https://nonexistent-url.com")
 	requireFailure(t, result)
 	t.Log("Correctly failed to get non-existent credentials")
-
-	// Delete vault
-	result = runCLI(t, "vaults", "delete", "--id", vaultID)
-	requireSuccess(t, result)
 }

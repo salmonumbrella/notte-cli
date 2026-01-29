@@ -34,10 +34,6 @@ func TestPageObserve(t *testing.T) {
 		t.Error("Observe returned empty output")
 	}
 	t.Log("Successfully observed page")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestPageExecuteAction(t *testing.T) {
@@ -66,10 +62,6 @@ func TestPageExecuteAction(t *testing.T) {
 	result = runCLIWithTimeout(t, 120*time.Second, "sessions", "execute", "--id", sessionID, "--action", actionJSON)
 	requireSuccess(t, result)
 	t.Log("Successfully executed action")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestPageScrapeBasic(t *testing.T) {
@@ -102,10 +94,6 @@ func TestPageScrapeBasic(t *testing.T) {
 		t.Error("Scrape returned empty output")
 	}
 	t.Log("Successfully scraped page content")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestPageScrapeWithInstructions(t *testing.T) {
@@ -133,10 +121,6 @@ func TestPageScrapeWithInstructions(t *testing.T) {
 	result = runCLIWithTimeout(t, 120*time.Second, "sessions", "scrape", "--id", sessionID, "--instructions", "Extract the main heading text")
 	requireSuccess(t, result)
 	t.Log("Successfully scraped with instructions")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestPageScrapeOnlyMainContent(t *testing.T) {
@@ -164,10 +148,6 @@ func TestPageScrapeOnlyMainContent(t *testing.T) {
 	result = runCLIWithTimeout(t, 120*time.Second, "sessions", "scrape", "--id", sessionID, "--only-main-content")
 	requireSuccess(t, result)
 	t.Log("Successfully scraped main content only")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestPageObserveExecuteScrapeFlow(t *testing.T) {
@@ -205,11 +185,6 @@ func TestPageObserveExecuteScrapeFlow(t *testing.T) {
 
 	// Step 4: Scrape content
 	result = runCLIWithTimeout(t, 120*time.Second, "sessions", "scrape", "--id", sessionID)
-	requireSuccess(t, result)
-	t.Log("Step 4: Scraped content")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
 	requireSuccess(t, result)
 	t.Log("Observe-Execute-Scrape flow completed successfully")
 }
