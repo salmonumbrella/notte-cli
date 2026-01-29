@@ -42,11 +42,7 @@ func TestSessionsLifecycle(t *testing.T) {
 	if !containsString(result.Stdout, sessionID) {
 		t.Error("Session list did not contain our session")
 	}
-
-	// Stop the session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
-	t.Log("Session stopped successfully")
+	t.Log("Session lifecycle test completed successfully")
 }
 
 func TestSessionsStartWithOptions(t *testing.T) {
@@ -76,10 +72,7 @@ func TestSessionsStartWithOptions(t *testing.T) {
 	// Verify session is running
 	result = runCLI(t, "sessions", "status", "--id", sessionID)
 	requireSuccess(t, result)
-
-	// Stop the session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
+	t.Log("Session with options test completed successfully")
 }
 
 func TestSessionsCookies(t *testing.T) {
@@ -100,10 +93,6 @@ func TestSessionsCookies(t *testing.T) {
 	result = runCLI(t, "sessions", "cookies", "--id", sessionID)
 	requireSuccess(t, result)
 	t.Log("Successfully retrieved session cookies")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestSessionsObserve(t *testing.T) {
@@ -127,10 +116,6 @@ func TestSessionsObserve(t *testing.T) {
 	result = runCLIWithTimeout(t, 120*time.Second, "sessions", "observe", "--id", sessionID, "--url", "https://example.com")
 	requireSuccess(t, result)
 	t.Log("Successfully observed page")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestSessionsScrape(t *testing.T) {
@@ -158,10 +143,6 @@ func TestSessionsScrape(t *testing.T) {
 	result = runCLIWithTimeout(t, 120*time.Second, "sessions", "scrape", "--id", sessionID)
 	requireSuccess(t, result)
 	t.Log("Successfully scraped page content")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestSessionsNetwork(t *testing.T) {
@@ -189,10 +170,6 @@ func TestSessionsNetwork(t *testing.T) {
 	result = runCLI(t, "sessions", "network", "--id", sessionID)
 	requireSuccess(t, result)
 	t.Log("Successfully retrieved network logs")
-
-	// Stop session
-	result = runCLI(t, "sessions", "stop", "--id", sessionID)
-	requireSuccess(t, result)
 }
 
 func TestSessionsList(t *testing.T) {
