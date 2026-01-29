@@ -61,16 +61,23 @@ func getCurrentSessionID() string {
 	return strings.TrimSpace(string(data))
 }
 
-// setCurrentSession saves the session ID to the current_session file
+// setCurrentSession saves the session ID to the current_session file.
+//
+// File permissions: We use 0o600 (owner read/write only) for Unix systems.
+// On Windows, Go's os.WriteFile permissions are best-effort since Windows uses
+// ACLs rather than Unix permission bits. This is acceptable because session IDs
+// are temporary UUIDs for session tracking, not sensitive secrets.
 func setCurrentSession(id string) error {
 	configDir, err := config.Dir()
 	if err != nil {
 		return err
 	}
-	// Ensure directory exists
+	// Ensure directory exists with owner-only access (0o700)
 	if err := os.MkdirAll(configDir, 0o700); err != nil {
 		return err
 	}
+	// Write session file with owner-only permissions (0o600)
+	// Note: On Windows, these permissions are approximated via ACLs
 	return os.WriteFile(filepath.Join(configDir, config.CurrentSessionFile), []byte(id), 0o600)
 }
 
